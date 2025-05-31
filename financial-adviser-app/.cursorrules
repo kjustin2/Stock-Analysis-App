@@ -1,0 +1,35 @@
+{
+    "java": {
+        "formatter": {
+            "indentSize": 4,
+            "tabSize": 4,
+            "insertSpaces": true
+        },
+        "imports": {
+            "sort": true,
+            "grouping": [
+                "java",
+                "javax",
+                "",
+                "com.financialadviser"
+            ]
+        },
+        "diagnostics": {
+            "enabled": true
+        },
+        "completion": {
+            "enabled": true,
+            "importOnCompletion": true
+        }
+    },
+    "search": {
+        "exclude": [
+            "target/**",
+            "*.class",
+            "*.jar",
+            ".git/**",
+            ".idea/**",
+            ".vscode/**"
+        ]
+    }
+} 
