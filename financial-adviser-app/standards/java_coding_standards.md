@@ -1,11 +1,37 @@
 # Java Coding Standards
 
 ## Table of Contents
-1. [Naming Conventions](#naming-conventions)
-2. [Code Organization](#code-organization)
-3. [Formatting](#formatting)
-4. [Best Practices](#best-practices)
-5. [Documentation](#documentation)
+1. [Source File Basics](#source-file-basics)
+2. [Naming Conventions](#naming-conventions)
+3. [Code Organization](#code-organization)
+4. [Formatting](#formatting)
+5. [Best Practices](#best-practices)
+6. [Documentation](#documentation)
+
+## Source File Basics
+
+### File Structure
+1. License/copyright information (if present)
+2. Package statement (not line-wrapped)
+3. Import statements
+4. Exactly one top-level class
+
+### File Encoding and Special Characters
+- Use UTF-8 encoding
+- Use ASCII horizontal space (0x20) for indentation
+- No tabs allowed
+- Use escape sequences for special characters (`\b`, `\t`, `\n`, `\f`, `\r`, `\s`, `\"`, `\'`, `\\`)
+- For non-ASCII characters, use Unicode character if it improves readability, otherwise use Unicode escape
+
+### Import Statements
+- No wildcard imports
+- No line-wrapping in import statements
+- Order imports in blocks:
+  1. Static imports in a single block
+  2. Non-static imports in a single block
+  3. Single blank line between blocks
+- Sort imports within blocks in ASCII order
+- No static import for static nested classes
 
 ## Naming Conventions
 
@@ -20,15 +46,20 @@
 - Boolean methods should be phrased as questions (e.g., `isValid`, `hasPermission`)
 
 ### Variables
-- Use camelCase
+- Use camelCase for local variables and parameters
 - Names should be meaningful and descriptive
 - Avoid single-letter names except for loop counters
 - Constants should be UPPER_SNAKE_CASE
+- One-character parameter names in public methods are forbidden
 
 ### Packages
 - All lowercase
 - Words separated by dots
 - Start with company domain in reverse (e.g., `com.financialadviser.module`)
+
+### Type Variables
+- Single capital letter (e.g., `T`, `E`, `X`)
+- Or class-like name followed by capital T (e.g., `RequestT`, `FooBarT`)
 
 ## Code Organization
 
@@ -40,6 +71,12 @@
 5. Protected methods
 6. Private methods
 7. Inner classes/interfaces
+
+### Method Organization
+- Methods with same name must be grouped together
+- This applies to overloaded constructors as well
+- Keep methods in a logical order (not chronological)
+- Each class should have a clear organization pattern
 
 ### File Organization
 - One top-level class per file
@@ -54,16 +91,18 @@
 - One blank line between methods
 - No space between method name and parenthesis
 - One space after control keywords (if, for, while)
+- Column limit: 100 characters
+
+### Braces (K&R Style)
+- Opening brace at end of line
+- Closing brace starts a new line
+- Braces required for all control structures (even single-line)
+- Empty blocks may be concise: `{}` (no linebreak)
 
 ### Line Wrapping
-- Maximum line length: 120 characters
 - Break after comma when wrapping method parameters
-- Align wrapped lines with opening parenthesis
-
-### Braces
-- Opening brace on the same line
-- Closing brace on a new line
-- Always use braces for control statements, even for single lines
+- Indent continuation lines 8 spaces
+- Align wrapped lines with opening parenthesis when possible
 
 ## Best Practices
 
@@ -73,6 +112,8 @@
 - Keep methods small and focused (< 30 lines)
 - Avoid deep nesting (maximum 3 levels)
 - Use meaningful exception messages
+- Always use @Override when applicable
+- Never ignore caught exceptions
 
 ### Null Handling
 - Use Optional for nullable return values
@@ -89,12 +130,15 @@
 - Use synchronized sparingly
 - Prefer concurrent collections over synchronized collections
 - Document thread-safety characteristics
+- Don't use finalizers
 
 ## Documentation
 
 ### Javadoc
-- Required for all public APIs
-- Include @param, @return, and @throws tags
+- Required for every public or protected class/method
+- First sentence should be a summary fragment
+- Use block tags in order: @param, @return, @throws, @deprecated
+- Include @param, @return, and @throws tags with descriptions
 - Describe the "what" not the "how"
 - Keep comments up-to-date with code changes
 
@@ -103,6 +147,7 @@
 - Use /* */ for multi-line comments
 - Avoid obvious comments
 - Comment complex algorithms and business rules
+- Required for non-obvious implementation decisions
 
 ### Example Javadoc
 ```java
