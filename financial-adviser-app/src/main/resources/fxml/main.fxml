@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.financialadviser.controller.MainController">
+
+    <MenuBar>
+        <Menu text="File">
+            <MenuItem text="Settings"/>
+            <SeparatorMenuItem/>
+            <MenuItem text="Exit"/>
+        </Menu>
+        <Menu text="Help">
+            <MenuItem text="About"/>
+        </Menu>
+    </MenuBar>
+
+    <TabPane VBox.vgrow="ALWAYS">
+        <Tab text="Dashboard" closable="false">
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Welcome to Financial Adviser" styleClass="title-label"/>
+            </VBox>
+        </Tab>
+        
+        <Tab text="Budget" closable="false">
+            <fx:include source="budget.fxml"/>
+        </Tab>
+        
+        <Tab text="Investments" closable="false">
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Investment Management" styleClass="title-label"/>
+            </VBox>
+        </Tab>
+        
+        <Tab text="Debts" closable="false">
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Debt Management" styleClass="title-label"/>
+            </VBox>
+        </Tab>
+        
+        <Tab text="Goals" closable="false">
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Financial Goals" styleClass="title-label"/>
+            </VBox>
+        </Tab>
+    </TabPane>
+
+    <HBox styleClass="status-bar">
+        <padding>
+            <Insets top="5" right="10" bottom="5" left="10"/>
+        </padding>
+        <Label fx:id="statusLabel" text="Ready"/>
+    </HBox>
+</VBox> 
