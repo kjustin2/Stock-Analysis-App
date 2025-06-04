@@ -1,7 +1,27 @@
 package com.financialadviser.controller;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.testfx.framework.junit5.ApplicationExtension;
+import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
+
 import com.financialadviser.model.User;
 import com.financialadviser.service.UserService;
+
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -9,19 +29,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, ApplicationExtension.class})
 class RegisterControllerTest {
@@ -29,8 +36,7 @@ class RegisterControllerTest {
     @Mock
     private UserService userService;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private RegisterController registerController;
 
@@ -70,16 +76,19 @@ class RegisterControllerTest {
     }
 
     @Test
-    void handleRegistration_WithValidInput_ShouldCreateUser() {
+    void handleRegistration_WithValidInput_ShouldCreateUser() throws InterruptedException {
         // Given
         String username = "testuser";
         String email = "test@example.com";
         String password = "password123";
-        String hashedPassword = "hashedPassword";
+        CountDownLatch latch = new CountDownLatch(1);
 
         when(userService.existsByUsername(username)).thenReturn(false);
         when(userService.existsByEmail(email)).thenReturn(false);
-        when(passwordEncoder.encode(password)).thenReturn(hashedPassword);
+        when(userService.save(any(User.class))).thenAnswer(invocation -> {
+            latch.countDown();
+            return invocation.getArgument(0);
+        });
 
         // When
         Platform.runLater(() -> {
@@ -89,6 +98,9 @@ class RegisterControllerTest {
             registerController.confirmPasswordField.setText(password);
             registerController.registerButton.fire();
         });
+
+        // Wait for the save operation to complete
+        latch.await(5, TimeUnit.SECONDS);
         WaitForAsyncUtils.waitForFxEvents();
 
         // Then
@@ -98,7 +110,7 @@ class RegisterControllerTest {
         User savedUser = userCaptor.getValue();
         assertThat(savedUser.getUsername()).isEqualTo(username);
         assertThat(savedUser.getEmail()).isEqualTo(email);
-        assertThat(savedUser.getPassword()).isEqualTo(hashedPassword);
+        assertThat(passwordEncoder.matches(password, savedUser.getPassword())).isTrue();
     }
 
     @Test

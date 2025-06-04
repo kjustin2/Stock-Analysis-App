@@ -1,5 +1,7 @@
 package com.financialadviser.model;
 
+import java.time.LocalDate;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,33 +23,31 @@ class UserTest {
     void gettersAndSetters_ShouldWorkCorrectly() {
         assertThat(user.getId()).isEqualTo(1L);
         assertThat(user.getUsername()).isEqualTo("testuser");
-        assertThat(user.getPassword()).isEqualTo("password123");
+        assertThat(user.getPassword()).isEqualTo("password123"); // Password is not encrypted in the model layer
         assertThat(user.getEmail()).isEqualTo("test@example.com");
-        assertThat(user.getBudgets()).isEmpty();
+        assertThat(user.getInvestments()).isEmpty();
     }
 
     @Test
-    void addBudget_ShouldAddBudgetAndSetUser() {
-        Budget budget = new Budget();
-        budget.setId(1L);
-        budget.setName("Test Budget");
+    void addInvestment_ShouldAddInvestmentAndSetUser() {
+        Investment investment = new Investment("AAPL", 10.0, 150.0, LocalDate.now(), "STOCKS");
+        investment.setId(1L);
 
-        user.addBudget(budget);
+        user.addInvestment(investment);
 
-        assertThat(user.getBudgets()).contains(budget);
-        assertThat(budget.getUser()).isEqualTo(user);
+        assertThat(user.getInvestments()).contains(investment);
+        assertThat(investment.getUser()).isEqualTo(user);
     }
 
     @Test
-    void removeBudget_ShouldRemoveBudgetAndUnsetUser() {
-        Budget budget = new Budget();
-        budget.setId(1L);
-        budget.setName("Test Budget");
+    void removeInvestment_ShouldRemoveInvestmentAndUnsetUser() {
+        Investment investment = new Investment("AAPL", 10.0, 150.0, LocalDate.now(), "STOCKS");
+        investment.setId(1L);
 
-        user.addBudget(budget);
-        user.removeBudget(budget);
+        user.addInvestment(investment);
+        user.removeInvestment(investment);
 
-        assertThat(user.getBudgets()).doesNotContain(budget);
-        assertThat(budget.getUser()).isNull();
+        assertThat(user.getInvestments()).doesNotContain(investment);
+        assertThat(investment.getUser()).isNull();
     }
 } 

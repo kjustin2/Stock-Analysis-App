@@ -1,7 +1,15 @@
 package com.financialadviser.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+
 import com.financialadviser.model.User;
 import com.financialadviser.service.UserService;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,11 +19,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
 
 @Controller
 public class LoginController {
@@ -35,11 +38,13 @@ public class LoginController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationContext applicationContext;
 
     @Autowired
-    public LoginController(UserService userService, PasswordEncoder passwordEncoder) {
+    public LoginController(UserService userService, PasswordEncoder passwordEncoder, ApplicationContext applicationContext) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.applicationContext = applicationContext;
     }
 
     @FXML
@@ -52,11 +57,16 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
+        if (username.isEmpty() || password.isEmpty()) {
+            showError("Validation Error", "Username and password are required.");
+            return;
+        }
+
         try {
             User user = userService.findByUsername(username);
             if (user != null && passwordEncoder.matches(password, user.getPassword())) {
                 logger.info("User {} logged in successfully", username);
-                openMainWindow();
+                openMainWindow(user);
             } else {
                 showError("Invalid credentials", "Username or password is incorrect.");
                 logger.warn("Failed login attempt for username: {}", username);
@@ -70,6 +80,7 @@ public class LoginController {
     private void handleRegister() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/register.fxml"));
+            loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
             Stage stage = new Stage();
             stage.setTitle("Register New User");
@@ -81,13 +92,18 @@ public class LoginController {
         }
     }
 
-    private void openMainWindow() {
+    private void openMainWindow(User user) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
+            loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
+            
+            MainController mainController = loader.getController();
+            mainController.setCurrentUser(user);
+            
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Financial Adviser");
+            stage.setTitle("Financial Adviser - " + user.getUsername());
             stage.show();
         } catch (Exception e) {
             logger.error("Error opening main window", e);

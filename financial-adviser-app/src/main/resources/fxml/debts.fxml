@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.financialadviser.controller.DebtController">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox spacing="20">
+        <!-- Left side: Debt List -->
+        <VBox spacing="10" minWidth="300">
+            <Label text="Debt Management" styleClass="section-title"/>
+            
+            <GridPane vgap="5" hgap="5">
+                <Label text="Description:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="debtDescriptionField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                
+                <Label text="Total Amount:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="debtAmountField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                
+                <Label text="Interest Rate (%):" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="interestRateField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                
+                <Label text="Minimum Payment:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="minimumPaymentField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                
+                <Label text="Type:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <ComboBox fx:id="debtTypeCombo" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                
+                <Button text="Add Debt" onAction="#handleAddDebt" 
+                        GridPane.columnIndex="1" GridPane.rowIndex="5" styleClass="primary-button"/>
+            </GridPane>
+            
+            <TableView fx:id="debtTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="descriptionColumn" text="Description"/>
+                    <TableColumn fx:id="amountColumn" text="Amount"/>
+                    <TableColumn fx:id="interestRateColumn" text="Interest Rate"/>
+                    <TableColumn fx:id="minimumPaymentColumn" text="Min Payment"/>
+                    <TableColumn fx:id="remainingColumn" text="Remaining"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Right side: Debt Analysis -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <!-- Debt Overview Chart -->
+            <Label text="Debt Overview" styleClass="section-title"/>
+            <PieChart fx:id="debtDistributionChart" title="Debt Distribution" legendVisible="true"/>
+
+            <!-- Payoff Strategy -->
+            <VBox spacing="5">
+                <Label text="Payoff Strategy" styleClass="section-title"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Strategy:"/>
+                    <ComboBox fx:id="payoffStrategyCombo">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="Avalanche (Highest Interest First)"/>
+                                <String fx:value="Snowball (Lowest Balance First)"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                    <Label text="Extra Monthly Payment:"/>
+                    <TextField fx:id="extraPaymentField" prefWidth="100"/>
+                    <Button text="Calculate" onAction="#handleCalculatePayoff" styleClass="primary-button"/>
+                </HBox>
+            </VBox>
+
+            <!-- Payoff Timeline -->
+            <Label text="Payoff Timeline" styleClass="section-title"/>
+            <LineChart fx:id="payoffChart" title="Debt Payoff Projection">
+                <xAxis>
+                    <CategoryAxis label="Month"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Balance ($)"/>
+                </yAxis>
+            </LineChart>
+
+            <!-- Summary Section -->
+            <VBox spacing="5" styleClass="summary-section">
+                <Label text="Debt Summary" styleClass="section-title"/>
+                <GridPane vgap="5" hgap="10">
+                    <Label text="Total Debt:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <Label fx:id="totalDebtLabel" text="$0.00" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    
+                    <Label text="Total Monthly Payment:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <Label fx:id="totalMonthlyLabel" text="$0.00" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    
+                    <Label text="Total Interest Paid:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <Label fx:id="totalInterestLabel" text="$0.00" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    
+                    <Label text="Debt Free Date:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <Label fx:id="debtFreeDateLabel" text="N/A" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
+            </VBox>
+        </VBox>
+    </HBox>
+</VBox> 

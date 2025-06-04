@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.financialadviser.controller.GoalController">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox spacing="20">
+        <!-- Left side: Goals List -->
+        <VBox spacing="10" minWidth="300">
+            <Label text="Financial Goals" styleClass="section-title"/>
+            
+            <GridPane vgap="5" hgap="5">
+                <Label text="Goal Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="goalNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                
+                <Label text="Target Amount:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="targetAmountField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                
+                <Label text="Current Amount:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="currentAmountField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                
+                <Label text="Target Date:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <DatePicker fx:id="targetDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                
+                <Label text="Priority:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <ComboBox fx:id="priorityCombo" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="High"/>
+                            <String fx:value="Medium"/>
+                            <String fx:value="Low"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+                
+                <Button text="Add Goal" onAction="#handleAddGoal" 
+                        GridPane.columnIndex="1" GridPane.rowIndex="5" styleClass="primary-button"/>
+            </GridPane>
+            
+            <TableView fx:id="goalsTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="nameColumn" text="Goal"/>
+                    <TableColumn fx:id="targetAmountColumn" text="Target"/>
+                    <TableColumn fx:id="currentAmountColumn" text="Current"/>
+                    <TableColumn fx:id="deadlineColumn" text="Deadline"/>
+                    <TableColumn fx:id="progressColumn" text="Progress"/>
+                    <TableColumn fx:id="priorityColumn" text="Priority"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Right side: Goal Analysis -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <!-- Goal Progress Chart -->
+            <Label text="Goal Progress" styleClass="section-title"/>
+            <StackedBarChart fx:id="progressChart" title="Goals Progress">
+                <xAxis>
+                    <CategoryAxis label="Goals"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Amount ($)" autoRanging="true"/>
+                </yAxis>
+            </StackedBarChart>
+
+            <!-- Goal Timeline -->
+            <Label text="Goal Timeline" styleClass="section-title"/>
+            <ScrollPane fitToWidth="true">
+                <VBox fx:id="timelineContainer" spacing="10">
+                    <!-- Timeline items will be added dynamically -->
+                </VBox>
+            </ScrollPane>
+
+            <!-- Recommendations -->
+            <VBox spacing="5">
+                <Label text="Goal Recommendations" styleClass="section-title"/>
+                <TextArea fx:id="recommendationsArea" wrapText="true" editable="false" 
+                         prefRowCount="4" styleClass="recommendations-area"/>
+            </VBox>
+
+            <!-- Summary Section -->
+            <VBox spacing="5" styleClass="summary-section">
+                <Label text="Goals Summary" styleClass="section-title"/>
+                <GridPane vgap="5" hgap="10">
+                    <Label text="Total Goals:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <Label fx:id="totalGoalsLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    
+                    <Label text="Total Target Amount:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <Label fx:id="totalTargetLabel" text="$0.00" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    
+                    <Label text="Total Progress:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <Label fx:id="totalProgressLabel" text="$0.00" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    
+                    <Label text="Average Progress:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <Label fx:id="averageProgressLabel" text="0%" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
+            </VBox>
+        </VBox>
+    </HBox>
+</VBox> 

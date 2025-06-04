@@ -1,0 +1,146 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# testing
+/coverage
+/coverage-report
+/.nyc_output
+
+# next.js
+/.next/
+/out/
+.next/
+next-env.d.ts
+build
+.swc/
+
+# production
+/build
+/dist
+/.build
+/out
+/.output
+
+# misc
+.DS_Store
+*.pem
+.env*.local
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+debug.log
+debug/
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+.project
+.classpath
+.settings/
+.history/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs
+*.log
+log/
+npm-debug.log*
+
+# Cache directories
+.npm
+.eslintcache
+.stylelintcache
+.cache/
+.parcel-cache
+.next/cache/
+.swc/
+*.cache
+
+# Compiled output
+dist/
+build/
+out/
+.output/
+*.min.js
+*.min.css
+*.map
+
+# Bundle analysis
+stats.json
+.bundle-stats/
+bundle-stats/
+
+# Optional: Storybook
+storybook-static/
+.storybook-out/
+
+# Optional: Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/results/
+
+# Optional: Coverage directory
+coverage/
+.coverage/
+.nyc_output/
+
+# Optional: PWA files
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# Tailwind CSS
+.tailwind-cache/
+tailwind.output.css
+
+# postcss
+.postcss-cache/
+
+# Optional: Temporary files
+*.temp
+*.tmp
+.tmp/
+temp/ 

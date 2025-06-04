@@ -56,13 +56,16 @@ public class AppConfig {
         em.setPackagesToScan("com.financialadviser.model");
         
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        vendorAdapter.setShowSql(true);
+        vendorAdapter.setGenerateDdl(true);
         em.setJpaVendorAdapter(vendorAdapter);
         
         Properties properties = new Properties();
         properties.setProperty("hibernate.dialect", "org.hibernate.community.dialect.SQLiteDialect");
-        properties.setProperty("hibernate.hbm2ddl.auto", "update");
+        properties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
         properties.setProperty("hibernate.show_sql", "true");
         properties.setProperty("hibernate.format_sql", "true");
+        properties.setProperty("hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_HOLD");
         em.setJpaProperties(properties);
         
         return em;

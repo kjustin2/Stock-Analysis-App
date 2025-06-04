@@ -7,25 +7,20 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.financialadviser.controller.MainController">
 
-    <MenuBar>
+    <MenuBar fx:id="menuBar">
         <Menu text="File">
-            <MenuItem text="Settings"/>
+            <MenuItem text="Settings" onAction="#handleSettings"/>
             <SeparatorMenuItem/>
-            <MenuItem text="Exit"/>
+            <MenuItem text="Exit" onAction="#handleExit"/>
         </Menu>
         <Menu text="Help">
-            <MenuItem text="About"/>
+            <MenuItem text="About" onAction="#handleAbout"/>
         </Menu>
     </MenuBar>
 
-    <TabPane VBox.vgrow="ALWAYS">
+    <TabPane fx:id="contentTabPane" VBox.vgrow="ALWAYS">
         <Tab text="Dashboard" closable="false">
-            <VBox spacing="10">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Welcome to Financial Adviser" styleClass="title-label"/>
-            </VBox>
+            <fx:include source="dashboard.fxml"/>
         </Tab>
         
         <Tab text="Budget" closable="false">
@@ -33,37 +28,19 @@
         </Tab>
         
         <Tab text="Investments" closable="false">
-            <VBox spacing="10">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Investment Management" styleClass="title-label"/>
-            </VBox>
+            <fx:include source="investments.fxml"/>
         </Tab>
         
         <Tab text="Debts" closable="false">
-            <VBox spacing="10">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Debt Management" styleClass="title-label"/>
-            </VBox>
+            <fx:include source="debts.fxml"/>
         </Tab>
         
         <Tab text="Goals" closable="false">
-            <VBox spacing="10">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Financial Goals" styleClass="title-label"/>
-            </VBox>
+            <fx:include source="goals.fxml"/>
         </Tab>
     </TabPane>
 
-    <HBox styleClass="status-bar">
-        <padding>
-            <Insets top="5" right="10" bottom="5" left="10"/>
-        </padding>
-        <Label fx:id="statusLabel" text="Ready"/>
+    <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #f4f4f4; -fx-padding: 5;">
+        <Label fx:id="statusLabel" text="Not logged in"/>
     </HBox>
 </VBox> 
