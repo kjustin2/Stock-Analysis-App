@@ -12,7 +12,11 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Support both ports
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://localhost:3000",
+        "https://kjustin2.github.io"  # Your GitHub Pages domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
