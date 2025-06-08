@@ -198,7 +198,7 @@ function App() {
                 <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '10px' }}>
                   <div style={{ textAlign: 'center' }}>
                     <p>Chart visualization would be implemented here with Chart.js or similar library</p>
-                    {chartData && (
+                    {chartData && chartData.dates && (
                       <small style={{ color: '#666' }}>
                         Data points available: {chartData.dates.length}
                       </small>
