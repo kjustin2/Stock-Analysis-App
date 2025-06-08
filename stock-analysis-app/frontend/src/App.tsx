@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import StockChart from './components/StockChart';
+import IndicatorChart from './components/IndicatorChart';
+import InfoTooltip from './components/InfoTooltip';
 
 // Types
 interface StockInfo {
@@ -15,21 +18,35 @@ interface Recommendation {
   confidence: number;
   price_target: number;
   reasoning: string[];
-  indicators: Record<string, any>;
+  indicators: Array<{
+    name: string;
+    value: string;
+    status: string;
+    color: string;
+  }> | Record<string, any>;
   risk_level: string;
 }
 
 interface ChartData {
-  dates: string[];
-  prices: number[];
-  volumes: number[];
+  symbol: string;
+  period: string;
+  data: Array<{
+    x: string;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+    v: number;
+  }>;
+  data_points: number;
 }
 
 interface NewsItem {
-  title: string;
+  headline: string;
   summary: string;
   url: string;
-  published_at: string;
+  published: string;
+  source: string;
 }
 
 // API Configuration - Update this with your deployed backend URL
@@ -76,7 +93,8 @@ function App() {
       setStockInfo(stockInfoRes.data);
       setRecommendation(recommendationRes.data);
       setChartData(chartDataRes.data);
-      setNews(newsRes.data);
+      // Extract news array from the nested response
+      setNews(newsRes.data.news || []);
     } catch (error) {
       console.error('Error:', error);
       setError('Failed to analyze stock. Please try again.');
@@ -195,16 +213,15 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '10px' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <p>Chart visualization would be implemented here with Chart.js or similar library</p>
-                    {chartData && chartData.dates && (
-                      <small style={{ color: '#666' }}>
-                        Data points available: {chartData.dates.length}
-                      </small>
-                    )}
+                {chartData ? (
+                  <StockChart chartData={chartData} height={400} />
+                ) : (
+                  <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '10px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p>Loading chart data...</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -220,24 +237,118 @@ function App() {
               <div className="indicators-section">
                 <h4>📊 Key Indicators</h4>
                 <div className="indicators-grid">
-                  {Object.entries(recommendation.indicators).map(([key, value]) => (
-                    <div key={key} className="indicator-item">
-                      <strong>{key.replace(/_/g, ' ').toUpperCase()}:</strong> {value}
-                    </div>
-                  ))}
+                  {Array.isArray(recommendation.indicators) ? 
+                    recommendation.indicators.map((indicator, index) => {
+                      // Get explanation for each indicator
+                      const getIndicatorExplanation = (indicatorName: string) => {
+                        const explanations: Record<string, string> = {
+                          'RSI': 'Relative Strength Index (0-100): Measures if a stock is overbought (>70) or oversold (<30). Values between 30-70 suggest balanced momentum.',
+                          'Moving Average': 'Simple Moving Average: The average price over a specific period. When current price is above SMA, it suggests upward momentum.',
+                          'Price Momentum': 'Rate of price change over time. Positive momentum suggests continued upward movement.',
+                          'Market Cap': 'Company size classification (Large/Mid/Small cap) affects stability and risk profile.',
+                          'P/E Ratio': 'Price-to-Earnings ratio shows if stock is fairly valued compared to earnings.',
+                          '52-Week Position': 'Current price position within the 52-week trading range.',
+                          'Volume': 'Trading Volume: Number of shares traded. High volume with price movement confirms the trend strength.',
+                          'MACD': 'Moving Average Convergence Divergence: Shows the relationship between two moving averages.',
+                          'Bollinger Bands': 'Price channels based on standard deviation. Shows volatility and potential support/resistance levels.'
+                        };
+                        
+                        return explanations[indicatorName] || 'Technical indicator used in stock analysis to help determine buy/sell signals.';
+                      };
+
+                      return (
+                        <div key={index} className="indicator-item" style={{ borderLeft: `4px solid ${indicator.color === 'green' ? '#4CAF50' : indicator.color === 'red' ? '#f44336' : '#ff9800'}` }}>
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                            <strong>{indicator.name}</strong>
+                            <InfoTooltip 
+                              title={indicator.name}
+                              content={getIndicatorExplanation(indicator.name)}
+                            />
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#667eea', marginBottom: '3px' }}>
+                            {indicator.value}
+                          </div>
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            color: indicator.color === 'green' ? '#4CAF50' : indicator.color === 'red' ? '#f44336' : '#ff9800',
+                            fontWeight: '500'
+                          }}>
+                            {indicator.status}
+                          </div>
+                        </div>
+                      );
+                    })
+                    :
+                    // Fallback for old format (if backend returns object instead of array)
+                    Object.entries(recommendation.indicators).map(([key, value]) => {
+                      const indicatorName = key.replace(/_/g, ' ').toUpperCase();
+                      const indicatorValue = typeof value === 'object' && value !== null && 'value' in value 
+                        ? value.value 
+                        : value;
+
+                      return (
+                        <div key={key} className="indicator-item">
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                            <strong>{indicatorName}</strong>
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#667eea' }}>
+                            {indicatorValue}
+                          </div>
+                        </div>
+                      );
+                    })
+                  }
                 </div>
               </div>
               
               <div className="risk-assessment">
-                <div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
                   <strong>⚠️ Risk Level:</strong>
                   <span className={`risk-level ${recommendation.risk_level.toLowerCase()}`}>
                     {recommendation.risk_level.toUpperCase()}
                   </span>
+                  <InfoTooltip 
+                    title="Risk Level Explanation"
+                    content={`${recommendation.risk_level.toUpperCase()} RISK: ${
+                      recommendation.risk_level.toLowerCase() === 'low' 
+                        ? 'Conservative investment with stable returns and minimal volatility. Suitable for risk-averse investors.'
+                        : recommendation.risk_level.toLowerCase() === 'medium'
+                        ? 'Moderate risk with balanced potential for returns and volatility. Good for investors with moderate risk tolerance.'
+                        : 'High volatility and potential for significant gains or losses. Only suitable for risk-tolerant investors.'
+                    }`}
+                  />
                 </div>
                 <div>
                   <small>Consider your risk tolerance before investing</small>
                 </div>
+              </div>
+            </div>
+
+            {/* Additional Stock Details */}
+            <div className="card">
+              <h3>📈 Stock Details</h3>
+              <div className="stock-details-grid">
+                <div className="detail-item">
+                  <strong>Previous Close:</strong> ${stockInfo.previous_close.toFixed(2)}
+                </div>
+                <div className="detail-item">
+                  <strong>Day Change:</strong> 
+                  <span className={change >= 0 ? 'positive' : 'negative'}>
+                    {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePercent.toFixed(2)}%)
+                  </span>
+                </div>
+              </div>
+              
+              {/* Technical Indicators Chart */}
+              <div style={{ marginTop: '20px' }}>
+                <h4 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
+                  📊 Technical Indicators Chart
+                  <InfoTooltip 
+                    title="Technical Indicators"
+                    content="Interactive charts showing key technical indicators like Simple Moving Averages (SMA) and Relative Strength Index (RSI). Use the controls to switch between different indicators and time periods."
+                  />
+                </h4>
+                <IndicatorChart symbol={stockInfo.symbol} height={300} />
               </div>
             </div>
           </div>
@@ -264,11 +375,13 @@ function App() {
                     <div key={index} className="news-item" style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
                       <h4 style={{ fontSize: '14px', marginBottom: '5px' }}>
                         <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: '#333', textDecoration: 'none' }}>
-                          {item.title}
+                          {item.headline}
                         </a>
                       </h4>
                       <p style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>{item.summary}</p>
-                      <small style={{ color: '#999' }}>{new Date(item.published_at).toLocaleDateString()}</small>
+                      <small style={{ color: '#999' }}>
+                        {item.source} - {new Date(item.published).toLocaleDateString()}
+                      </small>
                     </div>
                   ))
                 ) : (

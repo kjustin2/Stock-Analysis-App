@@ -309,6 +309,37 @@ body {
     color: #dc3545;
 }
 
+/* Stock Details Section */
+.stock-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.detail-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.detail-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.detail-item .positive {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.detail-item .negative {
+    color: #f44336;
+    font-weight: bold;
+}
+
 .loading {
     text-align: center;
     padding: 40px;
