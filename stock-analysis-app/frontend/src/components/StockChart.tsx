@@ -64,7 +64,6 @@ const StockChart: React.FC<StockChartProps> = ({ chartData, height = 400 }) => {
   // Prepare data for Chart.js
   const labels = chartData.data.map(point => new Date(point.x));
   const prices = chartData.data.map(point => point.c);
-  const volumes = chartData.data.map(point => point.v);
 
   // Calculate price change for color coding
   const firstPrice = prices[0];
