@@ -138,16 +138,23 @@ npm run dev
 
 #### Option B: Windows PowerShell (Parallel Start)
 ```powershell
-# Start both servers in parallel
-Start-Process powershell -ArgumentList "-Command", "cd backend; .\venv\Scripts\Activate.ps1; python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004"
+# Start both servers in parallel (CORRECTED PATHS)
+Start-Process powershell -ArgumentList "-Command", ".\venv\Scripts\Activate.ps1; cd backend; python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004"
 Start-Process powershell -ArgumentList "-Command", "cd frontend; npm run dev"
 
-# Alternative if Activate.ps1 doesn't exist:
-Start-Process powershell -ArgumentList "-Command", "cd backend; & .\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004"
+# Alternative using direct python path (no activation needed):
+Start-Process powershell -ArgumentList "-Command", "cd backend; ..\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004"
 Start-Process powershell -ArgumentList "-Command", "cd frontend; npm run dev"
 ```
 
-#### Option C: Unix/MacOS (Background Start)
+#### Option C: Easy Batch Files (Windows)
+```batch
+# Double-click these files or run from command line:
+start_backend.bat    # Starts the FastAPI backend server
+start_frontend.bat   # Starts the React development server
+```
+
+#### Option D: Unix/MacOS (Background Start)
 ```bash
 # Start backend in background
 cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004 &
