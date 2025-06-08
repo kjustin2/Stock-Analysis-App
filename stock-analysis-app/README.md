@@ -33,7 +33,10 @@ A comprehensive web application that analyzes stock prices and provides intellig
 
 ```
 stock-analysis-app/
-├── backend/                    # FastAPI backend
+├── .github/
+│   └── workflows/
+│       └── deploy.yml         # GitHub Actions CI/CD pipeline
+├── backend/                   # FastAPI backend
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── stocks.py      # Stock API endpoints
@@ -43,15 +46,24 @@ stock-analysis-app/
 │   │   │   └── news_service.py         # News integration
 │   │   └── main.py            # FastAPI application
 │   ├── requirements.txt       # Python dependencies
-│   └── tests/                 # Backend tests
-├── frontend/                  # React + TypeScript frontend
-│   ├── src/                   # Source code
+│   ├── Procfile              # Railway/Heroku deployment
+│   ├── railway.json          # Railway configuration
+│   ├── render.yaml           # Render configuration
+│   ├── start.sh              # Startup script
+│   └── tests/                # Backend tests
+├── frontend/                 # React + TypeScript frontend
+│   ├── src/
+│   │   ├── App.tsx           # Main React component
+│   │   ├── main.tsx          # React entry point
+│   │   ├── index.css         # Styles
+│   │   └── vite-env.d.ts     # TypeScript environment types
 │   ├── package.json          # Node.js dependencies
-│   ├── vite.config.ts        # Vite configuration
-│   └── tsconfig.json         # TypeScript configuration
+│   ├── vite.config.ts        # Vite configuration (GitHub Pages)
+│   ├── tsconfig.json         # TypeScript configuration
+│   └── index.html            # HTML entry point
 ├── tests/                    # Integration tests
 ├── requirements.txt          # Root Python dependencies
-└── README.md                # This file
+└── README.md                 # This file
 ```
 
 ## 🛠️ Technology Stack
@@ -296,28 +308,161 @@ cd frontend && npm run build
 
 ## 🚀 Deployment
 
-### Environment Variables
-```bash
-# Backend
-export PYTHONPATH="${PYTHONPATH}:${PWD}/backend"
-export ENVIRONMENT=production
+This application is deployed using a modern cloud-native architecture with separate frontend and backend deployments.
 
-# Frontend
-export NODE_ENV=production
+### 🌐 Live Application
+- **Frontend**: https://kjustin2.github.io/Code-Side-Projects/ (GitHub Pages)
+- **Backend**: Deployed on Railway/Render (URL configured via environment variables)
+
+### 🏗️ Deployment Architecture
+
+#### Frontend Deployment (GitHub Pages)
+- **Platform**: GitHub Pages with GitHub Actions CI/CD
+- **Framework**: React + Vite build system
+- **Auto-deployment**: Triggered on every push to `main` branch
+- **Build Process**: TypeScript compilation → Vite production build → GitHub Pages deployment
+
+#### Backend Deployment (Railway/Render)
+- **Platform**: Railway (recommended) or Render
+- **Framework**: FastAPI with Uvicorn ASGI server
+- **Configuration**: Automatic deployment from GitHub repository
+- **Environment**: Production-ready with proper CORS and error handling
+
+### 🔧 Deployment Configuration Files
+
+#### Frontend (GitHub Actions)
+```yaml
+# .github/workflows/deploy.yml
+- Automated build and deployment to GitHub Pages
+- Environment variable injection for API URL
+- TypeScript compilation and Vite build process
 ```
 
-### Production Deployment
+#### Backend (Railway)
+```json
+# backend/railway.json
+{
+  "build": { "builder": "NIXPACKS" },
+  "deploy": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
+```
+
+#### Backend (Render Alternative)
+```yaml
+# backend/render.yaml
+services:
+  - type: web
+    name: stock-analysis-api
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+```
+
+### 🚀 Deployment Steps
+
+#### 1. Backend Deployment (Choose One)
+
+**Option A: Railway (Recommended)**
+1. Sign up at [railway.app](https://railway.app) with GitHub
+2. Create new project → Deploy from GitHub repo
+3. Select `Code-Side-Projects` repository
+4. Set root directory: `stock-analysis-app/backend`
+5. Railway auto-detects `railway.json` configuration
+6. Copy deployment URL (e.g., `https://your-app.railway.app`)
+
+**Option B: Render**
+1. Sign up at [render.com](https://render.com) with GitHub
+2. New → Web Service → Connect GitHub repo
+3. Configure:
+   - Root Directory: `stock-analysis-app/backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Plan: Free
+4. Deploy and copy URL
+
+#### 2. Frontend Configuration
+1. Go to GitHub repository settings
+2. Navigate to: Settings → Secrets and variables → Actions
+3. Add repository secret:
+   - Name: `VITE_API_URL`
+   - Value: Your backend URL (e.g., `https://your-app.railway.app`)
+4. GitHub Actions automatically redeploys frontend with new API URL
+
+#### 3. Verification
+- Frontend automatically deploys to GitHub Pages
+- Backend serves API at your chosen platform
+- CORS configured to allow GitHub Pages domain
+- Environment variables securely managed via GitHub Secrets
+
+### 🔒 Security & Environment Variables
+
+#### Development
 ```bash
-# Build frontend
+# Local development uses fallback
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8004';
+```
+
+#### Production
+- **Frontend**: Environment variables injected during GitHub Actions build
+- **Backend**: Platform environment variables (Railway/Render)
+- **Secrets**: Managed via GitHub repository secrets (never committed to code)
+- **CORS**: Configured to allow GitHub Pages domain (`https://kjustin2.github.io`)
+
+### 🛠️ Manual Deployment (Alternative)
+
+#### Frontend Build
+```bash
 cd frontend
 npm run build
+# Deploy dist/ folder to any static hosting service
+```
 
-# Serve frontend (example with nginx)
-# Point nginx to frontend/dist/
-
-# Run backend with production server
+#### Backend Production
+```bash
 cd backend
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8004 --workers 4
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8004 --workers 4
+```
+
+### 📊 Deployment Features
+- **Zero-downtime deployments**: Both platforms support rolling deployments
+- **Automatic SSL**: HTTPS enabled by default on both GitHub Pages and Railway/Render
+- **Environment isolation**: Separate development and production configurations
+- **Monitoring**: Built-in health checks and logging on deployment platforms
+- **Scalability**: Backend can be scaled based on traffic demands
+
+### 🔍 Troubleshooting Deployment
+
+#### Common Issues
+1. **CORS Errors**: Ensure backend CORS includes GitHub Pages domain
+2. **API URL Not Set**: Verify `VITE_API_URL` secret is configured in GitHub
+3. **Build Failures**: Check GitHub Actions logs for TypeScript/build errors
+4. **Backend Not Responding**: Verify Railway/Render deployment status
+
+#### Debug Commands
+```bash
+# Check GitHub Actions deployment
+# Visit: https://github.com/kjustin2/Code-Side-Projects/actions
+
+# Test backend health
+curl https://your-backend-url.railway.app/health
+
+# Verify frontend build locally
+cd frontend && npm run build && npm run preview
+```
+
+### Environment Variables
+```bash
+# Backend (Platform-managed)
+export PYTHONPATH="${PYTHONPATH}:${PWD}/backend"
+export ENVIRONMENT=production
+export PORT=8004  # Set by Railway/Render
+
+# Frontend (GitHub Actions)
+export VITE_API_URL=https://your-backend-url.railway.app
+export NODE_ENV=production
 ```
 
 ## 📈 Architecture Highlights
