@@ -32,7 +32,8 @@ interface NewsItem {
   published_at: string;
 }
 
-const API_BASE = 'http://localhost:8004';
+// API Configuration - Update this with your deployed backend URL
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8004';
 
 const popularStocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX'];
 
