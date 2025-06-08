@@ -1,3 +1,3 @@
 """
-Test package for the stock analysis app.
+Test package for the stock analysis application.
 """ 

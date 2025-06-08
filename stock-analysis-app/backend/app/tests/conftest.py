@@ -1,23 +1,22 @@
 import pytest
-import sys
-import os
-import asyncio
-from typing import Generator
 from fastapi.testclient import TestClient
+import asyncio
+import os
+import sys
 
-# Add the parent directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# Configure pytest for async tests
+from backend.app.main import app
+
 @pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for each test case."""
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
-@pytest.fixture(scope="module")
-def test_app():
-    from app.main import app
-    with TestClient(app) as client:
-        yield client 
+@pytest.fixture
+def client():
+    """Create a test client."""
+    return TestClient(app) 
