@@ -33,6 +33,43 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+test.db
+stock_analysis.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Test reports and results
+test-reports/
+test-results/
+htmlcov/
+.coverage
+coverage/
+.nyc_output/
+junit.xml
+test-output/
+allure-results/
+allure-report/
 
 # Node/Frontend
 node_modules/
@@ -63,6 +100,9 @@ public/hot/
 .temp/
 .tmp/
 .output/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # IDE/Editor
 .idea/
@@ -76,6 +116,11 @@ public/hot/
 *.njsproj
 *.sln
 *.sw?
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
@@ -85,12 +130,217 @@ public/hot/
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log* 
+lerna-debug.log*
+debug.log
+error.log
+access.log
+
+# Environment and configuration
+.env
+.env.*
+!.env.example
+config.local.js
+config.local.json
+secrets.json
+.secrets
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.#*
+#*#
+
+# Documentation builds
+docs/_build/
+docs/build/
+site/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Stock Analysis App Specific
+# yfinance cache
+yfinance_cache/
+.yfinance_cache/
+
+# API keys and secrets (if any)
+api_keys.json
+secrets.yaml
+.secrets/
+
+# Local development files
+local_config.py
+local_settings.py
+dev_config.json
+
+# Generated documentation
+docs/generated/
+api_docs/
+
+# Performance and profiling
+*.prof
+*.profile
+.profiling/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Additional cleanup patterns for this project
+# Debug and test files
+debug_*.py
+test_*.py
+verify_*.py
+run_tests.py
+test-requirements.txt
+
+# TypeScript/Vite config files (when not using React)
+tsconfig*.json
+vite.config.*
+eslint.config.*
+
+# Note: frontend/src/ and frontend/public/ are now used for React app
+
+# Additional test and build artifacts
+*.coverage.*
+test-reports/
+test-results/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Additional database patterns
+*.db-*
+*.sqlite-*
+test*.db
+*_test.db
+development.db
+production.db
+
+# Additional log patterns
+*.log.*
+logs/
+log/
+
+# Additional temporary patterns
+*.tmp.*
+*.temp.*
+.tmp/
+.temp/
