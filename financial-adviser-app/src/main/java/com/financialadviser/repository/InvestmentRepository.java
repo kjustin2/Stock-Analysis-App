@@ -10,5 +10,8 @@ import com.financialadviser.model.User;
 
 @Repository
 public interface InvestmentRepository extends JpaRepository<Investment, Long> {
+    
     List<Investment> findByUser(User user);
+    
+    List<Investment> findByUserOrderByCurrentValueDesc(User user);
 } 

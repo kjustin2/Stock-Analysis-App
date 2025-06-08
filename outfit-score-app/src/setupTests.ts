@@ -123,10 +123,21 @@ const mockContext = {
   globalCompositeOperation: 'source-over',
 } as unknown as CanvasRenderingContext2D;
 
-HTMLCanvasElement.prototype.getContext = jest.fn((contextId: string) => {
+// Override getContext with proper type handling
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function(contextId: string, options?: any) {
   if (contextId === '2d') return mockContext;
-  return null;
-});
+  if (contextId === 'bitmaprenderer') {
+    return {
+      transferFromImageBitmap: jest.fn(),
+      canvas: this
+    } as unknown as ImageBitmapRenderingContext;
+  }
+  if (contextId === 'webgl' || contextId === 'webgl2') {
+    return null; // We don't need WebGL for our tests
+  }
+  return originalGetContext.call(this, contextId, options);
+};
 
 // Mock Image for TensorFlow.js
 class MockImage implements Partial<HTMLImageElement> {
@@ -142,44 +153,33 @@ class MockImage implements Partial<HTMLImageElement> {
 
 (global as any).Image = MockImage;
 
-// Mock TensorFlow.js and models
+// Mock TensorFlow.js
 jest.mock('@tensorflow/tfjs', () => ({
   setBackend: jest.fn(),
-  getBackend: jest.fn().mockReturnValue('webgl'),
-  ready: jest.fn().mockResolvedValue(true),
   browser: {
-    fromPixels: jest.fn().mockReturnValue({
-      expandDims: jest.fn().mockReturnValue({
-        toFloat: jest.fn().mockReturnValue({
-          div: jest.fn().mockReturnValue({})
-        })
-      })
-    })
-  }
+    fromPixels: jest.fn()
+  },
+  ready: jest.fn().mockResolvedValue(true),
+  getBackend: jest.fn().mockReturnValue('webgl')
 }));
 
+// Mock TensorFlow.js models
 jest.mock('@tensorflow-models/mobilenet', () => ({
   load: jest.fn().mockResolvedValue({
-    classify: jest.fn().mockResolvedValue([
-      { className: 'suit', probability: 0.8 },
-      { className: 'dress shirt', probability: 0.7 }
-    ])
+    classify: jest.fn().mockResolvedValue([])
   })
 }));
 
 jest.mock('@tensorflow-models/coco-ssd', () => ({
   load: jest.fn().mockResolvedValue({
-    detect: jest.fn().mockResolvedValue([
-      { class: 'person', score: 0.9 },
-      { class: 'tie', score: 0.85 }
-    ])
+    detect: jest.fn().mockResolvedValue([])
   })
 }));
 
 jest.mock('@tensorflow-models/blazeface', () => ({
   load: jest.fn().mockResolvedValue({
-    estimateFaces: jest.fn().mockResolvedValue([
-      { probability: 0.95 }
-    ])
+    estimateFaces: jest.fn().mockResolvedValue([])
   })
-})); 
+}));
+
+// Add any global test setup here 

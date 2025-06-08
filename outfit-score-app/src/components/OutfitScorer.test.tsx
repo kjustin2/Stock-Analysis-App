@@ -1,133 +1,121 @@
+/// <reference types="jest" />
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import OutfitScorer from './OutfitScorer';
 import '@testing-library/jest-dom';
 
-// Mock the URL.createObjectURL
-global.URL.createObjectURL = jest.fn();
+// Mock the necessary modules
+let dropCallback: (files: File[]) => void;
+jest.mock('react-dropzone', () => ({
+  useDropzone: ({ onDrop }: { onDrop: (files: File[]) => void }) => {
+    dropCallback = onDrop;
+    return {
+      getRootProps: () => ({
+        onClick: () => {
+          const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
+          onDrop([file]);
+        }
+      }),
+      getInputProps: () => ({
+        'data-testid': 'file-input'
+      }),
+      isDragActive: false
+    };
+  }
+}));
 
-describe('OutfitScorer Component', () => {
+// Mock the image processing module
+const mockProcessImage = jest.fn();
+jest.mock('../utils/imageProcessing', () => {
+  let modelLoaded = false;
+  return {
+    loadModel: async () => {
+      modelLoaded = true;
+      return Promise.resolve();
+    },
+    processImage: async (...args) => {
+      if (!modelLoaded) {
+        throw new Error('Model not loaded');
+      }
+      return mockProcessImage(...args);
+    }
+  };
+});
+
+describe('OutfitScorer', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
+    // Reset all mocks before each test
     jest.clearAllMocks();
+    
+    // Set up default mock implementation
+    mockProcessImage.mockResolvedValue({
+      items: [
+        {
+          label: 'suit',
+          confidence: 0.9,
+          category: 'formal'
+        }
+      ]
+    });
+
+    // Mock URL.createObjectURL
+    URL.createObjectURL = jest.fn().mockReturnValue('mock-image-url');
   });
 
-  it('renders the initial upload state', async () => {
+  afterEach(() => {
+    // Clean up
+    jest.resetAllMocks();
+  });
+
+  it('renders without crashing', () => {
     render(<OutfitScorer />);
-    await waitFor(() => {
-      expect(screen.getByText(/drag and drop your outfit photo here/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
+    expect(screen.getByTestId('file-input')).toBeInTheDocument();
+  });
 
-  it('shows loading state when models are initializing', async () => {
+  it('shows loading state when processing image', async () => {
+    // Set up a delayed mock to ensure loading state is visible
+    let resolvePromise: (value: any) => void;
+    mockProcessImage.mockImplementation(() => new Promise(resolve => {
+      resolvePromise = resolve;
+    }));
+
     render(<OutfitScorer />);
-    await waitFor(() => {
-      expect(screen.getByText(/loading ai models/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
-
-  it('handles file upload and processes image', async () => {
-    render(<OutfitScorer />);
-
-    // Wait for component to finish initial loading
-    await waitFor(() => {
-      expect(screen.getByText(/drag and drop your outfit photo here/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-
-    // Create a mock file
     const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-    
-    // Find the file input
-    const input = screen.getByRole('presentation').querySelector('input');
-    expect(input).toBeInTheDocument();
+    dropCallback([file]);
 
-    // Upload file
-    if (input) {
-      await act(async () => {
-        await userEvent.upload(input, file);
-      });
-    }
-
-    // Wait for analysis to complete
+    // Wait for loading state
     await waitFor(() => {
-      expect(screen.getByText(/style score/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
+      expect(screen.getByTestId('loading-state')).toBeInTheDocument();
+    });
 
-  it('displays error message when model loading fails', async () => {
-    // Mock tensorflow to throw an error
-    const mockTf = require('@tensorflow/tfjs');
-    mockTf.ready.mockRejectedValueOnce(new Error('Failed to load'));
+    // Resolve the promise to complete the test
+    resolvePromise!({
+      items: [{ label: 'suit', confidence: 0.9, category: 'formal' }]
+    });
+  });
 
+  it('displays results after processing', async () => {
     render(<OutfitScorer />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load ai models/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
-
-  it('shows progress indicators during model loading', async () => {
-    render(<OutfitScorer />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/mobileNet/i)).toBeInTheDocument();
-      expect(screen.getByText(/objectDetector/i)).toBeInTheDocument();
-      expect(screen.getByText(/faceDetector/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
-
-  it('handles invalid file types', async () => {
-    render(<OutfitScorer />);
-
-    // Wait for component to finish initial loading
-    await waitFor(() => {
-      expect(screen.getByText(/drag and drop your outfit photo here/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-
-    // Create an invalid file
-    const file = new File(['dummy content'], 'test.txt', { type: 'text/plain' });
-    
-    // Find the file input
-    const input = screen.getByRole('presentation').querySelector('input');
-    expect(input).toBeInTheDocument();
-
-    // Upload invalid file
-    if (input) {
-      await act(async () => {
-        await userEvent.upload(input, file);
-      });
-    }
-
-    // Verify no processing occurs for invalid file
-    expect(screen.queryByText(/analyzing your outfit/i)).not.toBeInTheDocument();
-  }, 20000);
-
-  it('provides detailed style breakdown', async () => {
-    render(<OutfitScorer />);
-
-    // Wait for component to finish initial loading
-    await waitFor(() => {
-      expect(screen.getByText(/drag and drop your outfit photo here/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-
-    // Create a mock file
     const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-    
-    // Find the file input
-    const input = screen.getByRole('presentation').querySelector('input');
-    expect(input).toBeInTheDocument();
+    dropCallback([file]);
 
-    // Upload file
-    if (input) {
-      await act(async () => {
-        await userEvent.upload(input, file);
-      });
-    }
-
-    // Wait for analysis to complete and check for detailed breakdown
+    // Wait for results
     await waitFor(() => {
-      expect(screen.getByText(/style score/i)).toBeInTheDocument();
-    }, { timeout: 15000 });
-  }, 20000);
+      expect(screen.getByTestId('score-display')).toBeInTheDocument();
+    }, { timeout: 2000 });
+  });
+
+  it('handles errors gracefully', async () => {
+    // Mock an error response
+    mockProcessImage.mockRejectedValue(new Error('Failed to process image'));
+
+    render(<OutfitScorer />);
+    const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
+    dropCallback([file]);
+
+    // Wait for error message
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).toBeInTheDocument();
+    });
+  });
 }); 

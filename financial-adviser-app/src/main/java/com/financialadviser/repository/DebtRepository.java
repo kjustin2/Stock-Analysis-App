@@ -11,4 +11,6 @@ import com.financialadviser.model.User;
 @Repository
 public interface DebtRepository extends JpaRepository<Debt, Long> {
     List<Debt> findByUser(User user);
+    List<Debt> findByUserOrderByInterestRateDesc(User user);
+    List<Debt> findByUserOrderByRemainingAmountAsc(User user);
 } 

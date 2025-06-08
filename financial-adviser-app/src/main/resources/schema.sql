@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS users;
 
 -- Create users table
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE users (
 
 -- Create goals table
 CREATE TABLE goals (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     target_amount DECIMAL(38,2) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE goals (
 
 -- Create investments table
 CREATE TABLE investments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     symbol VARCHAR(255) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE investments (
 
 -- Create investment_transactions table
 CREATE TABLE investment_transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     investment_id INTEGER NOT NULL,
     transaction_date DATE NOT NULL,
     transaction_type VARCHAR(255) NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE investment_transactions (
 
 -- Create debts table
 CREATE TABLE debts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     debt_type VARCHAR(255) NOT NULL,

@@ -1,0 +1,39 @@
+# Backend specific files
+
+# Database files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Uploads and user content
+uploads/
+user_data/
+
+# Build output
+dist/
+build/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Environment files
+.env.local
+.env.development
+.env.production
+
+# Testing
+coverage/
+.nyc_output/
+
+# Development
+.nodemon.json
+nodemon.json
+
+# Cache
+.cache/
+.tmp/ 

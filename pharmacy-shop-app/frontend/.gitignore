@@ -1,0 +1,22 @@
+﻿# Vite specific files
+.vite/
+vite.config.js.timestamp-*
+
+# React specific
+.react/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# Build outputs
+dist/
+build/
+
+# Development
+.eslintcache
+.stylelintcache
+
+# Hot reload
+*.hot-update.*

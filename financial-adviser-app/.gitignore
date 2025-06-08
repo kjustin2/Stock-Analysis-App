@@ -4,6 +4,7 @@
 # Log files
 *.log
 logs/
+*.log.gz
 
 # BlueJ files
 *.ctxt
@@ -35,6 +36,7 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+maven.zip
 
 # IDE files
 .idea/
@@ -48,10 +50,16 @@ buildNumber.properties
 *.swp
 *.swo
 
-# SQLite database files
+# Database files
 *.db
 *.sqlite
 *.sqlite3
+*.h2.db
+*.mv.db
+*.trace.db
+*.lock.db
+data/
+database/
 
 # OS-specific files
 .DS_Store
@@ -64,13 +72,24 @@ Thumbs.db
 
 # Application-specific files
 financial_adviser.db
-application.properties
+application.properties.local
 application-*.properties
 !application-example.properties
 
 # Application specific
 dist/
 *.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+
+# Backup and temporary directories
+temp_backup/
+backups/
+backup/
+*.backup
 
 # Node.js
 node_modules/
@@ -96,8 +115,22 @@ coverage/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
-# Spring Boot
+# Spring Boot specific
 spring-boot-*.pid
+*.pid
+*.pid.lock
+.spring.pid
+application-*.yml
+application-*.yaml
+!application-example.yml
+!application-example.yaml
+
+# H2 Database files
+*.h2.db
+*.mv.db
+*.trace.db
+*.lock.db
+h2/
 
 # Cache files
 .cache/
@@ -107,20 +140,21 @@ spring-boot-*.pid
 # Maven wrapper
 maven.zip
 
-# Launch4j
+# Launch4j and jpackage
 *.exe.manifest
 *.exe.config
+*.ico
+jpackage-temp/
+app-image/
 
 # Test output
 surefire-reports/
 test-output/
+target/surefire-reports/
+target/failsafe-reports/
 
 # Hibernate
 hibernate.cfg.xml.bak
-
-# Spring Boot
-*.pid.lock
-.spring.pid
 
 # IDE - VSCode additional
 .vscode/*
@@ -130,13 +164,116 @@ hibernate.cfg.xml.bak
 !.vscode/extensions.json
 *.code-workspace
 
+# IDE - Eclipse additional
+.metadata
+.recommenders/
+.sonarlint/
+
+# IDE - IntelliJ additional
+*.ipr
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/scopes/scope_settings.xml
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+.idea/datasources.xml
+.idea/dataSources.ids
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+
 # Temporary files
 *.tmp
 *.temp
 *.swp
 *.bak
 *~
+.#*
 
 # Debug files
 debug/
-debug.log 
+debug.log
+
+# Application logs
+application.log
+application-*.log
+spring.log
+app.log
+financial-adviser.log
+financial-adviser-*.log
+financial-adviser-*.log.gz
+
+# Security and sensitive files
+*.key
+*.pem
+*.p12
+*.jks
+secrets/
+credentials/
+
+# Documentation build
+docs/_build/
+site/
+
+# Native image build
+*.so
+*.dylib
+*.dll
+
+# GraalVM native image
+graalvm-reachability-metadata/
+META-INF/native-image/
+
+# Financial Adviser specific
+financial-data/
+user-data/
+reports/
+exports/
+
+# Project-specific files
+SIMPLIFICATION_PLAN.md
+EXECUTABLE_GENERATION_PLAN.md
+test-improvement-plan.md
+build-exe.bat
+*.bat
+*.sh
+
+# Maven wrapper scripts (optional - uncomment if you want to ignore them)
+# mvnw
+# mvnw.cmd
+
+# Large binary files and documents
+*.exe
+*.msi
+*.dmg
+*.pdf
+*.doc
+*.docx
+
+# Additional common patterns
+*.orig
+*.rej
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux specific
+*~
+.fuse_hidden*
+.directory
+.Trash-* 
