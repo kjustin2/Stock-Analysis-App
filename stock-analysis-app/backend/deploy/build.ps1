@@ -1,44 +1,41 @@
-# AWS Lambda Build Script for Stock Analysis API (PowerShell)
+# Build Working Lambda Function (No Heavy Dependencies)
 
-Write-Host "Building Lambda deployment package..." -ForegroundColor Green
+Write-Host "Building Lambda function..." -ForegroundColor Green
 
 # Clean previous builds
-if (Test-Path "build") { Remove-Item -Recurse -Force "build" }
-if (Test-Path "lambda-deployment.zip") { Remove-Item -Force "lambda-deployment.zip" }
+if (Test-Path "build-working") { Remove-Item -Recurse -Force "build-working" }
+if (Test-Path "lambda-working.zip") { Remove-Item -Force "lambda-working.zip" }
 
 # Create build directory
-New-Item -ItemType Directory -Path "build" -Force | Out-Null
+New-Item -ItemType Directory -Path "build-working" -Force | Out-Null
 
-# Copy application code
-Write-Host "Copying application code..." -ForegroundColor Yellow
-Copy-Item -Recurse "app" "build/"
-Copy-Item "lambda_function.py" "build/"
-Copy-Item "lambda_requirements.txt" "build/requirements.txt"
+# Copy working lambda function
+Write-Host "Copying lambda function..." -ForegroundColor Yellow
+Copy-Item "lambda_function.py" "build-working/lambda_function.py"
+Copy-Item "requirements.txt" "build-working/requirements.txt"
 
-# Install dependencies
-Write-Host "Installing dependencies..." -ForegroundColor Yellow
-Set-Location "build"
-pip install -r requirements.txt -t .
+# Install minimal dependencies
+Write-Host "Installing minimal dependencies..." -ForegroundColor Yellow
+Set-Location "build-working"
+pip install -r requirements.txt -t . --upgrade
 
-# Remove unnecessary files to reduce package size
-Write-Host "Optimizing package size..." -ForegroundColor Yellow
+# Remove unnecessary files
+Write-Host "Optimizing package..." -ForegroundColor Yellow
 Get-ChildItem -Recurse -Directory -Name "__pycache__" | ForEach-Object { Remove-Item -Recurse -Force $_ -ErrorAction SilentlyContinue }
 Get-ChildItem -Recurse -Directory -Name "*.dist-info" | ForEach-Object { Remove-Item -Recurse -Force $_ -ErrorAction SilentlyContinue }
-Get-ChildItem -Recurse -Directory -Name "tests" | ForEach-Object { Remove-Item -Recurse -Force $_ -ErrorAction SilentlyContinue }
 Get-ChildItem -Recurse -File -Name "*.pyc" | ForEach-Object { Remove-Item -Force $_ -ErrorAction SilentlyContinue }
-Get-ChildItem -Recurse -File -Name "*.pyo" | ForEach-Object { Remove-Item -Force $_ -ErrorAction SilentlyContinue }
-
-# Remove large unnecessary packages
-if (Test-Path "pandas/tests") { Remove-Item -Recurse -Force "pandas/tests" -ErrorAction SilentlyContinue }
-if (Test-Path "numpy/tests") { Remove-Item -Recurse -Force "numpy/tests" -ErrorAction SilentlyContinue }
-if (Test-Path "scipy/tests") { Remove-Item -Recurse -Force "scipy/tests" -ErrorAction SilentlyContinue }
 
 # Create deployment package
-Write-Host "Creating deployment package..." -ForegroundColor Yellow
-Compress-Archive -Path ".\*" -DestinationPath "..\lambda-deployment.zip" -Force
+Write-Host "Creating working deployment package..." -ForegroundColor Yellow
+Compress-Archive -Path ".\*" -DestinationPath "..\lambda-working.zip" -Force
 
 Set-Location ".."
-$fileSize = (Get-Item "lambda-deployment.zip").Length / 1MB
-Write-Host "Build complete! Package size: $([math]::Round($fileSize, 2)) MB" -ForegroundColor Green
+Write-Host "Build complete! Package size:" -ForegroundColor Green
+if (Test-Path "lambda-working.zip") {
+    $size = (Get-Item "lambda-working.zip").Length / 1MB
+    Write-Host "$([math]::Round($size, 2)) MB" -ForegroundColor Cyan
+} else {
+    Write-Host "Package not found" -ForegroundColor Red
+}
 
 Write-Host "Build completed successfully!" -ForegroundColor Green 

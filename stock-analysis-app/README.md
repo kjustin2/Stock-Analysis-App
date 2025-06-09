@@ -4,7 +4,7 @@ A modern web application that provides AI-powered stock analysis and investment 
 
 ## 🌐 Live Demo
 - **Frontend**: https://kjustin2.github.io/Code-Side-Projects/
-- **Backend API**: Deployed on AWS Lambda (serverless)
+- **Backend API**: AWS Lambda Function URL (serverless)
 
 ## ✨ Features
 
@@ -18,15 +18,15 @@ A modern web application that provides AI-powered stock analysis and investment 
 ## 🛠️ Tech Stack
 
 **Frontend**: React + TypeScript + Vite  
-**Backend**: FastAPI + Python  
-**Data**: yfinance, pandas-ta  
-**Deployment**: GitHub Pages + AWS Lambda  
+**Backend**: FastAPI + Python (AWS Lambda)  
+**Deployment**: GitHub Pages + AWS Lambda Function URLs  
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.9+
 - Node.js 16+
+- AWS CLI (for deployment)
 
 ### Local Development
 
@@ -38,9 +38,15 @@ cd Code-Side-Projects/stock-analysis-app
 
 2. **Setup Backend**
 ```bash
+# Create virtual environment
 python -m venv venv
+
+# Activate virtual environment
 .\venv\Scripts\activate  # Windows
 # source venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+cd backend
 pip install -r requirements.txt
 ```
 
@@ -53,21 +59,15 @@ cd ..
 
 4. **Start Development Servers**
 
-**Easy Way (Windows):**
+**Backend (Terminal 1):**
 ```bash
-# Double-click these files:
-start_backend.bat
-start_frontend.bat
-```
-
-**Manual Way:**
-```bash
-# Terminal 1: Backend
-.\venv\Scripts\activate
+.\venv\Scripts\activate  # Windows
 cd backend
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8004
+```
 
-# Terminal 2: Frontend
+**Frontend (Terminal 2):**
+```bash
 cd frontend
 npm run dev
 ```
@@ -79,137 +79,210 @@ npm run dev
 
 ## 📊 API Endpoints
 
+- `GET /` - API status
+- `GET /health` - Health check
 - `GET /stocks/{symbol}` - Stock information
 - `GET /stocks/{symbol}/recommendation` - BUY/SELL recommendation
 - `GET /stocks/{symbol}/chart-data?period=1m` - Chart data
 - `GET /stocks/{symbol}/news` - Latest news
-- `GET /health` - Health check
 
-## 🚀 Deployment
+## 🏗️ Building for Production
 
-### Frontend (GitHub Pages)
-- Automatically deploys on push to `main` branch
-- Uses GitHub Actions for CI/CD
-- Environment variables managed via GitHub Secrets
+### Local Testing Build
 
-### Backend (AWS Lambda)
+To test the Lambda package locally before deployment:
 
-#### Prerequisites
-- AWS CLI installed and configured (`aws configure`)
-- Python 3.9+ with pip
-
-#### Option A: Function URLs (Recommended - Simpler)
 ```bash
-cd backend
-
-# Install Lambda dependencies
-pip install mangum
-
-# Build deployment package (Windows)
-.\deploy\build.ps1
-
-# Deploy with Function URL (no API Gateway needed)
-bash deploy/deploy-function-url.sh
+cd backend\deploy
+.\build.ps1
 ```
 
-#### Option B: API Gateway + Lambda (Advanced)
+This creates `lambda-deployment.zip` with all dependencies packaged for AWS Lambda.
+
+### Frontend Build
+
 ```bash
-cd backend
-
-# Build deployment package
-.\deploy\build.ps1
-
-# Deploy with API Gateway
-bash deploy/deploy.sh
+cd frontend
+npm run build
 ```
 
-#### Manual Deployment
-1. **Build Package**: Run `.\deploy\build.ps1` to create `lambda-deployment.zip`
-2. **Create Lambda Function**: Upload ZIP in AWS Console
-3. **Setup Function URL**: Enable direct HTTPS endpoint (recommended)
-   - OR Setup API Gateway: Create REST API with proxy integration
-4. **Configure CORS**: Built-in with Function URLs
+## 🚀 AWS Lambda Deployment
 
-#### Security Configuration
-**IMPORTANT**: Never commit API URLs to your repository!
+### Prerequisites
+- AWS CLI installed and configured: `aws configure`
+- AWS account with Lambda permissions
 
-1. After deployment, copy the API Gateway URL
-2. Add to GitHub Secrets:
-   - Go to Settings → Secrets and variables → Actions
-   - Create secret: `VITE_API_URL`
-   - Value: Your API Gateway URL
-3. Frontend automatically uses the secret during build
+### Step 1: Build the Package
 
-### Local Environment Setup
-Create `frontend/.env.local` (not committed):
 ```bash
-VITE_API_URL=http://localhost:8004
+cd backend\deploy
+.\build.ps1
 ```
+
+This script:
+- Creates a clean build directory
+- Installs Lambda-specific dependencies
+- Packages everything into `lambda-deployment.zip`
+
+### Step 2: Deploy to AWS
+
+#### Option A: AWS Console (Recommended for first-time)
+
+1. **Create Lambda Function**:
+   - Go to AWS Lambda Console
+   - Click "Create function"
+   - Choose "Author from scratch"
+   - Function name: `stock-analysis-api`
+   - Runtime: `Python 3.9`
+   - Click "Create function"
+
+2. **Upload Code**:
+   - In the function page, click "Upload from" → ".zip file"
+   - Upload `backend\deploy\lambda-deployment.zip`
+   - Click "Save"
+
+3. **Create Function URL**:
+   - Go to "Configuration" → "Function URL"
+   - Click "Create function URL"
+   - Auth type: `NONE` (public access)
+   - CORS settings:
+     - Allow origin: `*` (or your specific domain)
+     - Allow headers: `*`
+     - Allow methods: `*`
+   - Click "Save"
+
+4. **Copy Function URL**: Save the generated URL for frontend configuration
+
+#### Option B: AWS CLI (Advanced)
+
+```bash
+# Create function (first time only)
+aws lambda create-function \
+  --function-name stock-analysis-api \
+  --runtime python3.9 \
+  --role arn:aws:iam::YOUR_ACCOUNT:role/lambda-execution-role \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://lambda-deployment.zip
+
+# Update function code (subsequent deployments)
+aws lambda update-function-code \
+  --function-name stock-analysis-api \
+  --zip-file fileb://lambda-deployment.zip
+```
+
+### Step 3: Configure CORS (if needed)
+
+If you encounter CORS issues, run the security script:
+
+```bash
+cd backend\deploy
+.\secure-cors.ps1
+```
+
+This restricts access to your GitHub Pages domain only.
 
 ## 🔧 Project Structure
 
 ```
 stock-analysis-app/
-├── backend/                 # FastAPI backend
-│   ├── app/                # Application code
-│   ├── deploy/             # AWS Lambda deployment
-│   │   ├── build.ps1      # Build script (Windows)
-│   │   ├── deploy.sh      # AWS deployment script
-│   │   └── README.md      # Deployment guide
-│   ├── lambda_function.py  # Lambda entry point
-│   ├── requirements.txt    # Python dependencies
-│   └── lambda_requirements.txt # Lambda-specific deps
-├── frontend/               # React frontend
-│   ├── src/               # Source code
-│   ├── package.json       # Node dependencies
-│   └── vite.config.ts     # Build configuration
-├── .github/workflows/     # CI/CD pipeline
-├── start_backend.bat      # Easy backend startup
-└── start_frontend.bat     # Easy frontend startup
-```
-
-## 🧪 Testing
-
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend build test
-cd frontend
-npm run build
+├── backend/
+│   ├── app/                    # FastAPI application
+│   │   ├── main.py            # Main FastAPI app
+│   │   └── ...                # Other modules
+│   ├── deploy/
+│   │   ├── build.ps1          # Build script for Lambda
+│   │   ├── secure-cors.ps1    # CORS security script
+│   │   └── fix-function-url-auth.ps1  # Auth fix script
+│   ├── lambda_function.py     # Lambda entry point
+│   └── requirements.txt       # Python dependencies
+├── frontend/
+│   ├── src/                   # React source code
+│   ├── package.json          # Node dependencies
+│   └── vite.config.ts        # Vite configuration
+└── .github/workflows/        # GitHub Actions CI/CD
 ```
 
 ## 🔍 Troubleshooting
 
-**Common Issues:**
-- **Port conflicts**: Backend uses 8004, frontend uses 5173
-- **CORS errors**: Ensure both servers are running
-- **Virtual environment**: Make sure it's activated before running backend
+### Local Development Issues
 
-**Debug Commands:**
+**Backend won't start:**
 ```bash
-# Check backend health
-curl http://localhost:8004/health
+# Check if virtual environment is activated
+.\venv\Scripts\activate
 
-# Verify frontend build
-cd frontend && npm run build
+# Verify dependencies
+pip install -r backend/requirements.txt
+
+# Check port availability
+netstat -an | findstr :8004
 ```
 
-## 📈 Sample Analysis
+**Frontend build fails:**
+```bash
+# Clear cache and reinstall
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
 
-The system analyzes stocks like AAPL, MSFT, GOOGL with:
-- **Technical indicators**: RSI, Moving Averages, MACD
-- **Fundamental metrics**: P/E ratio, market cap, volume
-- **Market sentiment**: News analysis and trend detection
-- **Risk assessment**: LOW/MEDIUM/HIGH with explanations
+### AWS Lambda Issues
+
+**Function URL returns 403:**
+- Check Function URL auth type is set to `NONE`
+- Verify CORS configuration
+- Run `.\deploy\fix-function-url-auth.ps1`
+
+**Import errors in Lambda:**
+- Rebuild package: `.\deploy\build.ps1`
+- Check Python version compatibility (use 3.9)
+- Verify all dependencies are in `requirements.txt`
+
+**CORS errors from frontend:**
+- Update Function URL CORS settings
+- Run `.\deploy\secure-cors.ps1` for domain-specific access
+- Check browser developer tools for exact error
+
+### Debug Commands
+
+```bash
+# Test Lambda package locally
+cd backend
+python lambda_function.py
+
+# Check API health
+curl https://your-function-url.lambda-url.region.on.aws/health
+
+# Verify frontend build
+cd frontend && npm run build && npm run preview
+```
+
+## 🔐 Security Notes
+
+- **Never commit API URLs** to your repository
+- Use GitHub Secrets for environment variables
+- Consider restricting Function URL access to your domain
+- Monitor AWS CloudWatch logs for security events
+
+## 📈 Sample Usage
+
+```bash
+# Get stock info
+curl "https://your-function-url/stocks/AAPL"
+
+# Get recommendation
+curl "https://your-function-url/stocks/AAPL/recommendation"
+
+# Get chart data
+curl "https://your-function-url/stocks/AAPL/chart-data?period=1mo"
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests if needed
+3. Test locally with both frontend and backend
+4. Build and test Lambda package
 5. Submit a pull request
 
 ## 📄 License
@@ -218,4 +291,7 @@ This project is for educational and demonstration purposes.
 
 ---
 
-**Ready to analyze stocks?** Start both servers and visit http://localhost:5173! 📈 
+**Ready to analyze stocks?** 
+1. Start local development servers
+2. Visit http://localhost:5173
+3. Deploy to AWS when ready! 📈 

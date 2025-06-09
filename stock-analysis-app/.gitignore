@@ -346,12 +346,113 @@ log/
 .temp/
 
 # AWS Lambda deployment files
-lambda-deployment.zip
-backend/build/
-backend/lambda-deployment.zip
 *.zip
+lambda-*.zip
+backend/build*/
+backend/lambda-*.zip
+backend/build/
+backend/build-*/
 
 # AWS configuration (never commit these!)
 .aws/
 aws-config.json
 lambda-config.local.json
+cors-config.json
+
+# Lambda test and response files
+test-event.json
+response*.json
+*-test.json
+final-test.json
+simple-test.json
+
+# Deployment artifacts
+lambda_requirements*.txt
+lambda_function_working.py
+lambda_function_simple.py
+
+# Old deployment platform files
+render.yaml
+railway.json
+Procfile
+start.sh
+deploy.sh
+build.sh
+
+# Batch files
+*.bat
+
+# PowerShell execution policy files
+*.ps1.log
+
+# Additional AWS and deployment patterns
+.serverless/
+serverless.yml
+.chalice/
+chalice.json
+sam-template.yaml
+template.yaml
+cloudformation-template.json
+
+# Additional temporary and cache files
+.cache/
+.temp/
+.tmp/
+temp/
+tmp/
+*.cache
+.build/
+
+# Additional IDE and editor files
+*.swp
+*.swo
+*~
+.#*
+#*#
+*.orig
+*.rej
+
+# Additional OS files
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Additional Python patterns
+*.egg
+*.egg-info/
+.installed.cfg
+MANIFEST
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Additional Node.js patterns
+.npm
+.node_repl_history
+*.tsbuildinfo
+.eslintcache
+
+# Additional test patterns
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.cache
+nosetests.xml
+
+# Additional log patterns
+*.log
+*.log.*
+logs/
+log/
+
+# Additional backup patterns
+*.backup
+*.bak
+*.old

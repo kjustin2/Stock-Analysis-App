@@ -1,3 +1,0 @@
-"""
-Stock Analysis Services
-""" 
