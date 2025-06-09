@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api import stocks
@@ -9,14 +10,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Configure CORS origins based on environment
+cors_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://kjustin2.github.io"  # Your GitHub Pages domain
+]
+
+# Add any additional origins from environment variable
+if os.getenv("CORS_ORIGINS"):
+    additional_origins = os.getenv("CORS_ORIGINS").split(",")
+    cors_origins.extend([origin.strip() for origin in additional_origins])
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", 
-        "http://localhost:3000",
-        "https://kjustin2.github.io"  # Your GitHub Pages domain
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

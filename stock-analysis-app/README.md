@@ -4,7 +4,7 @@ A modern web application that provides AI-powered stock analysis and investment 
 
 ## 🌐 Live Demo
 - **Frontend**: https://kjustin2.github.io/Code-Side-Projects/
-- **Backend API**: Deployed on Railway/Render
+- **Backend API**: Deployed on AWS Lambda (serverless)
 
 ## ✨ Features
 
@@ -20,7 +20,7 @@ A modern web application that provides AI-powered stock analysis and investment 
 **Frontend**: React + TypeScript + Vite  
 **Backend**: FastAPI + Python  
 **Data**: yfinance, pandas-ta  
-**Deployment**: GitHub Pages + Railway/Render  
+**Deployment**: GitHub Pages + AWS Lambda  
 
 ## 🚀 Quick Start
 
@@ -92,14 +92,59 @@ npm run dev
 - Uses GitHub Actions for CI/CD
 - Environment variables managed via GitHub Secrets
 
-### Backend (Railway/Render)
-1. Sign up at [railway.app](https://railway.app) or [render.com](https://render.com)
-2. Connect your GitHub repository
-3. Set root directory to `stock-analysis-app/backend`
-4. Deploy automatically detects configuration files
+### Backend (AWS Lambda)
 
-### Environment Configuration
-Add `VITE_API_URL` secret in GitHub repository settings pointing to your deployed backend URL.
+#### Prerequisites
+- AWS CLI installed and configured (`aws configure`)
+- Python 3.9+ with pip
+
+#### Option A: Function URLs (Recommended - Simpler)
+```bash
+cd backend
+
+# Install Lambda dependencies
+pip install mangum
+
+# Build deployment package (Windows)
+.\deploy\build.ps1
+
+# Deploy with Function URL (no API Gateway needed)
+bash deploy/deploy-function-url.sh
+```
+
+#### Option B: API Gateway + Lambda (Advanced)
+```bash
+cd backend
+
+# Build deployment package
+.\deploy\build.ps1
+
+# Deploy with API Gateway
+bash deploy/deploy.sh
+```
+
+#### Manual Deployment
+1. **Build Package**: Run `.\deploy\build.ps1` to create `lambda-deployment.zip`
+2. **Create Lambda Function**: Upload ZIP in AWS Console
+3. **Setup Function URL**: Enable direct HTTPS endpoint (recommended)
+   - OR Setup API Gateway: Create REST API with proxy integration
+4. **Configure CORS**: Built-in with Function URLs
+
+#### Security Configuration
+**IMPORTANT**: Never commit API URLs to your repository!
+
+1. After deployment, copy the API Gateway URL
+2. Add to GitHub Secrets:
+   - Go to Settings → Secrets and variables → Actions
+   - Create secret: `VITE_API_URL`
+   - Value: Your API Gateway URL
+3. Frontend automatically uses the secret during build
+
+### Local Environment Setup
+Create `frontend/.env.local` (not committed):
+```bash
+VITE_API_URL=http://localhost:8004
+```
 
 ## 🔧 Project Structure
 
@@ -107,8 +152,13 @@ Add `VITE_API_URL` secret in GitHub repository settings pointing to your deploye
 stock-analysis-app/
 ├── backend/                 # FastAPI backend
 │   ├── app/                # Application code
+│   ├── deploy/             # AWS Lambda deployment
+│   │   ├── build.ps1      # Build script (Windows)
+│   │   ├── deploy.sh      # AWS deployment script
+│   │   └── README.md      # Deployment guide
+│   ├── lambda_function.py  # Lambda entry point
 │   ├── requirements.txt    # Python dependencies
-│   └── railway.json       # Deployment config
+│   └── lambda_requirements.txt # Lambda-specific deps
 ├── frontend/               # React frontend
 │   ├── src/               # Source code
 │   ├── package.json       # Node dependencies

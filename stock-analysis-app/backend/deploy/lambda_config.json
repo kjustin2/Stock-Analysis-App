@@ -1,0 +1,30 @@
+{
+  "function_name": "stock-analysis-api",
+  "runtime": "python3.9",
+  "handler": "lambda_function.lambda_handler",
+  "timeout": 30,
+  "memory_size": 512,
+  "environment_variables": {
+    "STAGE": "prod"
+  },
+  "iam_role": {
+    "name": "lambda-execution-role",
+    "policies": [
+      "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    ]
+  },
+  "api_gateway": {
+    "name": "stock-analysis-api",
+    "stage": "prod",
+    "cors": {
+      "allow_origins": [
+        "http://localhost:5173",
+        "http://localhost:3000", 
+        "https://kjustin2.github.io"
+      ],
+      "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allow_headers": ["Content-Type", "Authorization"]
+    }
+  },
+  "region": "us-east-1"
+} 

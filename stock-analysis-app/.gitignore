@@ -344,3 +344,14 @@ log/
 *.temp.*
 .tmp/
 .temp/
+
+# AWS Lambda deployment files
+lambda-deployment.zip
+backend/build/
+backend/lambda-deployment.zip
+*.zip
+
+# AWS configuration (never commit these!)
+.aws/
+aws-config.json
+lambda-config.local.json
