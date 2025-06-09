@@ -4,6 +4,8 @@ from typing import Dict, Any
 from mangum import Mangum
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+import hashlib
+import datetime
 
 # Create FastAPI app
 app = FastAPI(title="Stock Analysis API", version="1.0.0")
@@ -16,19 +18,44 @@ class SimpleStockService:
         # Using demo API key - in production, use environment variable
         self.api_key = "demo"
         self.base_url = "https://www.alphavantage.co/query"
+        
+        # Base prices for different stocks to make them unique
+        self.base_prices = {
+            "AAPL": 175.50,
+            "GOOGL": 2850.75,
+            "MSFT": 415.25,
+            "AMZN": 3200.80,
+            "TSLA": 245.60,
+            "NVDA": 875.30,
+            "META": 485.90,
+            "NFLX": 425.15,
+            "ORCL": 115.45,
+            "CRM": 265.80,
+            "ADBE": 625.40,
+            "INTC": 45.75
+        }
+    
+    def _get_symbol_price(self, symbol: str) -> float:
+        """Generate a consistent price for a symbol based on hash"""
+        if symbol.upper() in self.base_prices:
+            base = self.base_prices[symbol.upper()]
+        else:
+            # Generate a price based on symbol hash for consistency
+            hash_val = int(hashlib.md5(symbol.encode()).hexdigest()[:8], 16)
+            base = 50 + (hash_val % 500)  # Price between $50-$550
+        
+        # Add some daily variation based on current date
+        today_hash = int(hashlib.md5(f"{symbol}{datetime.date.today()}".encode()).hexdigest()[:4], 16)
+        variation = (today_hash % 20 - 10) / 10  # ±10% variation
+        
+        return round(base * (1 + variation / 100), 2)
     
     def get_stock_quote(self, symbol: str) -> Dict[str, Any]:
         """Get basic stock quote data"""
         try:
-            # For demo purposes, return mock data
-            # In production, you'd use: 
-            # url = f"{self.base_url}?function=GLOBAL_QUOTE&symbol={symbol}&apikey={self.api_key}"
-            # response = requests.get(url)
-            # data = response.json()
-            
-            # Mock data matching frontend expectations
-            current_price = 150.25
-            previous_close = 148.10
+            # Generate symbol-specific prices
+            current_price = self._get_symbol_price(symbol)
+            previous_close = round(current_price * (0.98 + (hash(symbol) % 40) / 1000), 2)  # Slight variation
             
             # Get company name based on symbol
             company_names = {
@@ -39,19 +66,27 @@ class SimpleStockService:
                 "TSLA": "Tesla Inc.",
                 "NVDA": "NVIDIA Corporation",
                 "META": "Meta Platforms Inc.",
-                "NFLX": "Netflix Inc."
+                "NFLX": "Netflix Inc.",
+                "ORCL": "Oracle Corporation",
+                "CRM": "Salesforce Inc.",
+                "ADBE": "Adobe Inc.",
+                "INTC": "Intel Corporation"
             }
+            
+            # Generate symbol-specific volume and market cap
+            volume_hash = hash(f"{symbol}volume") % 10000000
+            volume = 1000000 + abs(volume_hash)
             
             mock_data = {
                 "symbol": symbol.upper(),
                 "name": company_names.get(symbol.upper(), f"{symbol.upper()} Corporation"),
                 "current_price": current_price,
                 "previous_close": previous_close,
-                "change": current_price - previous_close,
+                "change": round(current_price - previous_close, 2),
                 "change_percent": f"{((current_price - previous_close) / previous_close * 100):.2f}%",
-                "volume": 1234567,
-                "market_cap": "2.5T",
-                "pe_ratio": 25.4,
+                "volume": volume,
+                "market_cap": f"{round(current_price * 1000000000 / 1000000000, 1)}B",
+                "pe_ratio": round(15 + (hash(symbol) % 20), 1),
                 "status": "success"
             }
             return mock_data
@@ -64,8 +99,8 @@ class SimpleStockService:
             quote = self.get_stock_quote(symbol)
             price = quote["current_price"]
             
-            # Enhanced recommendation logic
-            if price > 150:
+            # Enhanced recommendation logic based on price ranges
+            if price > 500:
                 action = "HOLD"
                 stars = 3
                 confidence = 75
@@ -76,7 +111,7 @@ class SimpleStockService:
                     "Recommend holding position and monitoring for better entry points"
                 ]
                 risk_level = "Medium"
-            elif price > 100:
+            elif price > 200:
                 action = "BUY"
                 stars = 4
                 confidence = 85
@@ -99,25 +134,27 @@ class SimpleStockService:
                 ]
                 risk_level = "Low"
             
-            # Generate mock indicators
+            # Generate symbol-specific indicators
+            rsi_val = 30 + (hash(f"{symbol}rsi") % 40)  # RSI between 30-70
+            
             indicators = [
                 {
                     "name": "RSI",
-                    "value": "45.2",
-                    "status": "Neutral",
-                    "color": "#ff9800"
+                    "value": f"{rsi_val}.2",
+                    "status": "Bullish" if rsi_val < 50 else "Bearish",
+                    "color": "#4CAF50" if rsi_val < 50 else "#f44336"
                 },
                 {
                     "name": "Moving Average",
-                    "value": "Bullish",
-                    "status": "Above SMA-50",
-                    "color": "#4CAF50"
+                    "value": "Bullish" if price > quote["previous_close"] else "Bearish",
+                    "status": "Above SMA-50" if price > quote["previous_close"] else "Below SMA-50",
+                    "color": "#4CAF50" if price > quote["previous_close"] else "#f44336"
                 },
                 {
                     "name": "Price Momentum",
-                    "value": "Positive",
-                    "status": "Upward trend",
-                    "color": "#4CAF50"
+                    "value": "Positive" if quote["change"] > 0 else "Negative",
+                    "status": "Upward trend" if quote["change"] > 0 else "Downward trend",
+                    "color": "#4CAF50" if quote["change"] > 0 else "#f44336"
                 },
                 {
                     "name": "Volume",
@@ -154,7 +191,10 @@ async def root():
         "endpoints": [
             "/health",
             "/stocks/{symbol}",
-            "/stocks/{symbol}/recommendation"
+            "/stocks/{symbol}/recommendation",
+            "/stocks/{symbol}/chart-data",
+            "/stocks/{symbol}/technical-chart",
+            "/stocks/{symbol}/news"
         ]
     }
 
@@ -194,22 +234,21 @@ async def get_recommendation(symbol: str):
 @app.get("/stocks/{symbol}/chart-data")
 async def get_chart_data(symbol: str, period: str = "1m"):
     """Get mock chart data in OHLCV format"""
-    # Generate realistic mock data
-    import datetime
-    
+    # Generate realistic mock data based on symbol
     data_points = []
-    base_price = 150.0
+    base_price = stock_service._get_symbol_price(symbol)
     
     # Generate 30 data points
     for i in range(30):
         date = datetime.datetime.now() - datetime.timedelta(days=29-i)
         
-        # Generate realistic OHLCV data
-        open_price = base_price + (i * 0.5) + ((-1)**i * 2)
-        high_price = open_price + abs(hash(str(i)) % 5)
-        low_price = open_price - abs(hash(str(i+1)) % 3)
+        # Generate realistic OHLCV data with symbol-specific variation
+        symbol_hash = hash(f"{symbol}{i}")
+        open_price = base_price + (i * 0.5) + ((symbol_hash % 10 - 5) * 2)
+        high_price = open_price + abs(symbol_hash % 5)
+        low_price = open_price - abs((symbol_hash + 1) % 3)
         close_price = low_price + (high_price - low_price) * 0.7
-        volume = 1000000 + (hash(str(i)) % 500000)
+        volume = 1000000 + abs(symbol_hash % 500000)
         
         data_points.append({
             "x": date.isoformat(),
@@ -230,12 +269,115 @@ async def get_chart_data(symbol: str, period: str = "1m"):
         "status": "success"
     }
 
+@app.get("/stocks/{symbol}/technical-chart")
+async def get_technical_chart(symbol: str, period: str = "1m"):
+    """Get technical chart data in the format expected by IndicatorChart component"""
+    # Get the OHLCV data first
+    chart_data = await get_chart_data(symbol, period)
+    
+    # Transform to the format expected by IndicatorChart
+    dates = [point["x"] for point in chart_data["data"]]
+    prices = [point["c"] for point in chart_data["data"]]  # Use closing prices
+    
+    # Generate mock technical indicators
+    sma_20 = []
+    sma_50 = []
+    rsi = []
+    ema_12 = []
+    ema_26 = []
+    macd_line = []
+    macd_signal = []
+    bollinger_upper = []
+    bollinger_middle = []
+    bollinger_lower = []
+    
+    for i, price in enumerate(prices):
+        # SMA 20
+        if i >= 19:
+            sma_20_val = sum(prices[i-19:i+1]) / 20
+            sma_20.append(round(sma_20_val, 2))
+        else:
+            sma_20.append(None)
+        
+        # SMA 50
+        if i >= 49:
+            sma_50_val = sum(prices[i-49:i+1]) / 50
+            sma_50.append(round(sma_50_val, 2))
+        else:
+            sma_50.append(None)
+        
+        # RSI (simplified mock)
+        rsi_val = 30 + (hash(f"{symbol}{i}rsi") % 40)  # RSI between 30-70
+        rsi.append(round(rsi_val, 1))
+        
+        # EMA 12 (simplified)
+        if i == 0:
+            ema_12.append(price)
+        else:
+            ema_12_val = (price * (2/13)) + (ema_12[-1] * (11/13))
+            ema_12.append(round(ema_12_val, 2))
+        
+        # EMA 26 (simplified)
+        if i == 0:
+            ema_26.append(price)
+        else:
+            ema_26_val = (price * (2/27)) + (ema_26[-1] * (25/27))
+            ema_26.append(round(ema_26_val, 2))
+        
+        # MACD
+        if len(ema_12) > 0 and len(ema_26) > 0:
+            macd_val = ema_12[-1] - ema_26[-1]
+            macd_line.append(round(macd_val, 3))
+            
+            # MACD Signal (9-period EMA of MACD)
+            if len(macd_line) >= 9:
+                signal_val = sum(macd_line[-9:]) / 9
+                macd_signal.append(round(signal_val, 3))
+            else:
+                macd_signal.append(None)
+        else:
+            macd_line.append(None)
+            macd_signal.append(None)
+        
+        # Bollinger Bands
+        if i >= 19:
+            sma_val = sum(prices[i-19:i+1]) / 20
+            variance = sum([(p - sma_val) ** 2 for p in prices[i-19:i+1]]) / 20
+            std_dev = variance ** 0.5
+            
+            bollinger_middle.append(round(sma_val, 2))
+            bollinger_upper.append(round(sma_val + (2 * std_dev), 2))
+            bollinger_lower.append(round(sma_val - (2 * std_dev), 2))
+        else:
+            bollinger_middle.append(None)
+            bollinger_upper.append(None)
+            bollinger_lower.append(None)
+    
+    return {
+        "symbol": symbol.upper(),
+        "period": period,
+        "dates": dates,
+        "price": prices,
+        "indicators": {
+            "sma_20": sma_20,
+            "sma_50": sma_50,
+            "rsi": rsi,
+            "ema_12": ema_12,
+            "ema_26": ema_26,
+            "macd_line": macd_line,
+            "macd_signal": macd_signal,
+            "bollinger_upper": bollinger_upper,
+            "bollinger_middle": bollinger_middle,
+            "bollinger_lower": bollinger_lower
+        },
+        "status": "success"
+    }
+
 @app.get("/stocks/{symbol}/news")
 async def get_news(symbol: str):
     """Get mock news data"""
-    import datetime
     
-    # Generate realistic news items
+    # Generate symbol-specific news items
     news_items = [
         {
             "headline": f"{symbol.upper()} Reports Strong Quarterly Earnings",

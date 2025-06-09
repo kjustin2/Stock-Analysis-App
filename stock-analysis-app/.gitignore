@@ -447,6 +447,30 @@ function-config.json
 *.py.bak
 *.py.tmp
 *.py.old
+
+# Deployment scripts (keep only essential ones)
+deploy-*.ps1
+!deploy-robust.ps1
+fix-*.ps1
+cors-*.ps1
+build-*.ps1
+secure-*.ps1
+test-*.ps1
+!test-api-fixes.ps1
+cleanup-*.ps1
+
+# Manual deployment artifacts
+deploy-manual/
+deploy-temp/
+deploy-robust-*/
+lambda-manual.zip
+lambda-deploy-*.zip
+create_zip.py
+
+# Empty directories that should be removed
+backend/deploy/
+backend/temp-deploy*/
+backend/build-*/
 *.js.bak
 *.js.tmp
 *.js.old

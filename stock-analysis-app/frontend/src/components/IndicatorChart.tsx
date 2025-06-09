@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   TimeScale,
+  Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
@@ -22,7 +23,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  TimeScale
+  TimeScale,
+  Filler
 );
 
 interface IndicatorChartProps {
