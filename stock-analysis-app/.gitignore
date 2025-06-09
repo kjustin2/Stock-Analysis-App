@@ -352,6 +352,11 @@ backend/build*/
 backend/lambda-*.zip
 backend/build/
 backend/build-*/
+backend/temp-deploy*/
+backend/final-deploy/
+backend/deploy/build*/
+backend/deploy/temp*/
+backend/deploy/final*/
 
 # AWS configuration (never commit these!)
 .aws/
@@ -361,7 +366,10 @@ cors-config.json
 
 # Lambda test and response files
 test-event.json
+test-http-event.json
 response*.json
+test-response*.json
+test-http-response*.json
 *-test.json
 final-test.json
 simple-test.json
@@ -370,6 +378,7 @@ simple-test.json
 lambda_requirements*.txt
 lambda_function_working.py
 lambda_function_simple.py
+lambda_function_minimal.py
 
 # Old deployment platform files
 render.yaml
@@ -402,6 +411,48 @@ temp/
 tmp/
 *.cache
 .build/
+
+# Project-specific temporary files
+backend/temp*/
+backend/build*/
+backend/deploy/temp*/
+backend/deploy/build*/
+backend/deploy/final*/
+frontend/temp*/
+frontend/build*/
+**/temp-*/
+**/build-*/
+**/final-*/
+
+# Deployment and build artifacts
+*.zip
+lambda-*.zip
+deployment-*.zip
+build-*.zip
+cors-fix*.zip
+final-fix*.zip
+
+# PowerShell and script artifacts
+*.ps1.log
+*.ps1.tmp
+script-output.txt
+deployment-log.txt
+
+# AWS CLI output files
+aws-output.json
+lambda-response.json
+function-config.json
+
+# Backup and temporary code files
+*.py.bak
+*.py.tmp
+*.py.old
+*.js.bak
+*.js.tmp
+*.js.old
+*.ts.bak
+*.ts.tmp
+*.ts.old
 
 # Additional IDE and editor files
 *.swp
