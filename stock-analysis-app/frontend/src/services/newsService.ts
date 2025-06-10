@@ -178,7 +178,7 @@ export class NewsService {
     return newsItems.slice(0, 5);
   }
 
-  private parseYahooRSS(rssContent: string, symbol: string): NewsItem[] {
+  private parseYahooRSS(rssContent: string, _symbol: string): NewsItem[] {
     const items: NewsItem[] = [];
     
     try {
