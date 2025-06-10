@@ -1,0 +1,137 @@
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+8
+Table 2 shows that linear regression model performs well as compared to SVM Model. Hence,
+linear regression model was used to determine the future trend since it was more accurate.
+Figure 3 shows the prediction of the future trend for the next 30 days.
+4.2.2 Analysis of algorithms used to determine whether to Buy or Sell:
+Bollinger Bands:
+Bollinger bands are basically volatility bands placed above and below the moving average of
+the data.
+Figure 4, Figure 5, and Figure 6 show various trends using Bollinger bands. If closing price is
+above the upper band, the stock may be shorted, otherwise it is a good time to position stocks.
+Moving Average Convergence/Divergence indicator (MACD):
+Figure 7, Figure 8, and Figure 9 show various trends using MACD which is used as an indicator
+to trade trends based on signal line. Trading is done if MACD line intersects signal line.
+Money Flow Index (MFI):
+Figure 10, Figure 11 and Figure 12 show various trends using MFI. It is used to find overbought
+or oversold signals in an asset as well as spot divergences in price. The value of MFI more than eighty
+and less than twenty is assumed as oversold.
+Table 2. Comparison of linear regression and SVR
+Model Name Accuracy (%) Predicted output(price) for
+7th December
+Actual output(price) for
+7th December
+Difference (%)
+Linear Regression 99.8 1946.92 1,958.35 0.58%
+SVM 94.6 1785.17 1958.35 8.8%
+Figure 3. Predicted Stock price trend of RIL
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+9
+Relative Strength Index (RSI):
+Figure 13 and Figure 14 show various trends using for RIL. The stock is usually understood
+overbought when the RSI is more than seventy percent and oversold when it is lower than thirty percent.
+4.2.3 Sentiment Analysis of Earning Call (EC)/ Annual General Meet (AGM) Analysis:
+Earnings call 1 (April 2020) and AGM 2 are conference calls. During the call, the management
+comments on the company’s financials like venue generated, profits, new projects, futures, etc. It
+Figure 4. Bollinger bands for RIL
+Figure 5. Past Buy or Sell Trend (Bollinger Bands)
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+10
+is a very important transcript which not only emphasizes numbers but also states the reason behind
+those numbers. Therefore, it can determine conditions for investors to trust or not on their equity.
+Table 3 lists findings of sentiment analysis of both scripts
+4.2.4 Balance Sheet (BS) and Income Statement Analysis (IS):
+The balance sheet is the most important document that is provided by the company. It determines
+the present conditions as well as the company’s future growth potential. The most important factors
+of the balance sheet are analyzed that assist traders not only to determine how strong the company’s
+current financial position is, but also whether investing in the company right now can be a profitable
+Figure 6. Future Buy or Sell (Bollinger Bands)
+Figure 7. MACD for RIL
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+11
+move or not. The financial data is extracted from the financial modeling “Prep” using their API.
+After analyzing the BS and the IS statements of RIL, it is found that the revenue grew at a rate of
+26% for the past two years.
+Table 4 shows results of in-depth analysis by computing Weighted Average Cost of Capital
+(WACC) and Debt-to-Equity ratio (D/E ratio), and Net Present Value (NPV).
+This is a good signal as it shows the company is coming out from its problems and strengthening
+itself. This can also be seen in the stock price as it grew from Rs 867/- to Rs. 1844/- (112.6%) between
+April 2020 and July 2020.
+Since generally Debt<WACC<Equity(20%) therefore we can expect a minimum of 15% returns
+on investment on buying the RIL Share which is a fair deal for the retail investor. Since Debt/Equity
+Figure 8 Past Buy or sell Trend (MACD)
+Figure 9. Future Buy or Sell(MACD)
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+12
+ratio is in between (0, 1) which means the company does not rely only on debt and has low solvency
+risk. This is a good indication. This means that even after paying 15% over equity the company has
+a huge corpus for investing in projects and assets. This is also a positive indication.
+If the revenue growth, perpetuity growth and cost of capital are 26%, 15% and 0.05% respectively,
+the forecasted price of the stock is calculated as 3228.778.
+This means keeping a long-term gain of 26% every year today the stock value can be 3228.77
+purchased. The current stock price is Rs. 1958/- which means the stock is currently undervalued and
+buying can be considered.
+Figure 10. MFI of RIL
+Figure 11. Past Buy or Sell Trend(MFI)
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+13
+The ROE for RIL is computed as per the DuPont analysis using (1) and obtained as 0.129, 0.1163,
+and 0.0936 for years 2018, 2019, 2020 respectively.
+ROE = Profitability * Tech Efficiency * Financial Structure (1)
+The past Return on Equity (ROE) is very good for RIL But since the IS and BS are provided in
+March of every month, so this calculation is till March 2020. The stock price of RIL grew by 104%
+between March and today so a better BS and IS are anticipated.
+Moreover, this data can be useful in determining internal operations within the company. Since
+the financial structure aspect of the formula is always nearly constant this means that the company is
+Figure 12. Future Buy or Sell (MFI)
+Figure 13. RSI plot and Past Buy/Sell trend (RSI) of RIL
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+14
+not relying upon debt to boost ROE hence a fair practice can be concluded. This is a good indication
+as the money invested by the investors will be safe.
+4.2.5 Stock recommendation and Trade assistance
+Table 5 shows analysis of the various financial factors. It can be concluded that the investors can
+consider buying RIL equity.
+Table 6 gives the best date for the purchase as 17th December 2020 using different algorithms.
+Figure 14. Future Buy or Sell(RSI)
+Table 3. Findings of Sentiment Analysis of EEC and AGM
+EC (April 2020) AGM (July 2020)
+Positive 323 204
+Neural 63 30
+Negative 293 181
+1 Link to the April Earnings call transcript -https://drive.google.com/file/d/1LArItEaUVgwc76tVq6r6Y8MiqhmRioon/view?usp=sharing
+2 Link to July AGM transcript -https://drive.google.com/file/d/1HrXpOywePjD0sZRXJ6_erhN52vG92Stz/view?usp=sharing
+Table 4. WACC, D/E ratio and NPV
+Factors Value
+WACC 14.99
+D/E ratio 0.76
+NPV 8905275970214.54
+International Journal of Information Technology Project Management
+Volume 13 • Issue 3
+15
+5. CoNCLUSIoN
+The stock market due to its highly volatile nature is an uncertain place for investment for any new
+or seasoned investor but the returns it provides cannot be ignored. Due to this same reason, many
+individuals invest in the stock market, but this level of uncertainty is also huge. So, there is a need for
+a system that can help investors in gaining high returns and possess a low risk. To put it all together,
+the detailed analysis and experimentation carried out by us raises the conclusion that the model we
+have implemented is a highly accurate one in predicting the price of a stock for the next day as well
+as in predicting the price trend of the same stock. The financial indicators which are included in
+making the model have proved to be a major success as they have helped in creating trade assistance
+which will help the investor in making decisions regarding the stock’s trade-off and maximizing
+their profits. Furthermore, the sentiment analysis of earning calls and annual general meetings has
+helped in gaining meaningful insight into a company’s present and future which may affect its stock
+price. The in-depth balance sheet and income statement analysis have also helped in creating a more
+accurate model that minimizes the chances of loss and maximizes the chances of gaining profits in
+the stock market.
+Even with a great study of a particular script, there is a fair chance of losing value on that
+script due to the volatile and risk-abating nature of the stock market. News sentiment analysis can
+sometimes play an important role in stock trend prediction and is not feasible due to no backdated
+data for stocks listed on NSE

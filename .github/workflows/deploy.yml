@@ -27,11 +27,11 @@ jobs:
         npm ci
 
     - name: Build
-      env:
-        VITE_API_URL: ${{ secrets.VITE_API_URL }}
       run: |
         cd stock-analysis-app/frontend
         npm run build
+      env:
+        VITE_FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
 
     - name: Setup Pages
       uses: actions/configure-pages@v4

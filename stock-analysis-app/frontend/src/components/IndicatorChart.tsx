@@ -12,8 +12,10 @@ import {
   Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import axios from 'axios';
 import InfoTooltip from './InfoTooltip';
+import { stockDataService } from '../services/stockDataService';
+import { technicalIndicatorService } from '../services/technicalIndicatorService';
+import type { TechnicalData } from '../services/technicalIndicatorService';
 
 ChartJS.register(
   CategoryScale,
@@ -32,32 +34,11 @@ interface IndicatorChartProps {
   height?: number;
 }
 
-interface TechnicalData {
-  symbol: string;
-  period: string;
-  dates: string[];
-  price: number[];
-  indicators: {
-    sma_20?: (number | null)[];
-    sma_50?: (number | null)[];
-    rsi?: (number | null)[];
-    ema_12?: (number | null)[];
-    ema_26?: (number | null)[];
-    macd_line?: (number | null)[];
-    macd_signal?: (number | null)[];
-    bollinger_upper?: (number | null)[];
-    bollinger_middle?: (number | null)[];
-    bollinger_lower?: (number | null)[];
-  };
-}
-
 const IndicatorChart: React.FC<IndicatorChartProps> = ({ symbol, height = 300 }) => {
   const [technicalData, setTechnicalData] = useState<TechnicalData | null>(null);
   const [currentPeriod, setCurrentPeriod] = useState('1m');
   const [loading, setLoading] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState('sma');
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8004';
 
   useEffect(() => {
     if (symbol) {
@@ -68,8 +49,17 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({ symbol, height = 300 })
   const fetchTechnicalData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/stocks/${symbol}/technical-chart?period=${currentPeriod}`);
-      setTechnicalData(response.data);
+      // Get chart data first
+      const chartData = await stockDataService.getChartData(symbol, currentPeriod);
+      
+      // Calculate technical indicators
+      const technicalData = technicalIndicatorService.calculateTechnicalIndicators(
+        chartData.data,
+        symbol,
+        currentPeriod
+      );
+      
+      setTechnicalData(technicalData);
     } catch (error) {
       console.error('Error fetching technical data:', error);
       // Generate fallback data for demonstration

@@ -1,110 +1,60 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Environment files
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.python-version
-.pytest_cache/
-htmlcov/
-.coverage
-.coverage.*
-.cache
-*.pyc
-*.pyo
-*.pyd
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.nox/
-.coverage
-.pytest_cache/
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
+.env.*
+!.env.example
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-test.db
-stock_analysis.db
-*.db-journal
-*.db-wal
-*.db-shm
-
-# Test reports and results
-test-reports/
-test-results/
-htmlcov/
-.coverage
-coverage/
-.nyc_output/
-junit.xml
-test-output/
-allure-results/
-allure-report/
-
-# Node/Frontend
+# Dependencies
 node_modules/
 .npm
-.eslintcache
-.node_repl_history
-*.tsbuildinfo
-.next
-.nuxt
+.pnpm-debug.log*
+.yarn-integrity
+yarn-error.log*
+yarn-debug.log*
+lerna-debug.log*
+npm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+coverage/
+*.local
+.next/
+.nuxt/
+.output/
 .vuepress/dist
 .serverless/
 .fusebox/
 .dynamodb/
-.tern-port
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-dist/
-dist-ssr/
-coverage/
-*.local
-build/
 .cache/
 public/hot/
 .parcel-cache/
 .rollup.cache/
 .temp/
 .tmp/
-.output/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
-# IDE/Editor
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+debug.log
+error.log
+access.log
+
+# IDE/Editor files
 .idea/
 .vscode/*
 !.vscode/extensions.json
@@ -122,7 +72,7 @@ pnpm-lock.yaml
 *.sublime-project
 *.sublime-workspace
 
-# OS
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -132,65 +82,17 @@ ehthumbs.db
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-debug.log
-error.log
-access.log
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
 
-# Environment and configuration
-.env
-.env.*
-!.env.example
-config.local.js
-config.local.json
-secrets.json
-.secrets
-
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-.#*
-#*#
-
-# Documentation builds
-docs/_build/
-docs/build/
-site/
-
-# Backup files
-*.bak
-*.backup
-*.old
-*.orig
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
+# ESLint cache
 .eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -201,60 +103,79 @@ pids/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# Parcel cache
 .cache
 .parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
 
 # Storybook build outputs
 .out
 .storybook-out
 
-# Temporary folders
-tmp/
-temp/
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.#*
+#*#
+*.orig
+*.rej
+*.bak
+*.backup
+*.old
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Test coverage
+coverage/
+*.coverage.*
+test-reports/
+test-results/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# Stock Analysis App Specific
-# yfinance cache
-yfinance_cache/
-.yfinance_cache/
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
-# API keys and secrets (if any)
+# API keys and secrets
 api_keys.json
 secrets.yaml
 .secrets/
+secrets.json
 
-# Local development files
-local_config.py
-local_settings.py
+# Local configuration
+local_config.*
+local_settings.*
 dev_config.json
+config.local.*
 
-# Generated documentation
-docs/generated/
-api_docs/
+# Documentation builds
+docs/_build/
+docs/build/
+site/
 
-# Performance and profiling
-*.prof
-*.profile
-.profiling/
+# Deployment artifacts
+*.zip
 
-# Jupyter Notebook checkpoints
+# Stock Analysis App Specific
+yfinance_cache/
+.yfinance_cache/
+
+# Additional temporary patterns
+temp/
+tmp/
+.build/
+frontend/temp*/
+frontend/build*/
+**/temp-*/
+**/build-*/
+
+# Jupyter Notebook
 .ipynb_checkpoints/
 
 # IPython
@@ -270,21 +191,21 @@ Pipfile.lock
 # poetry
 poetry.lock
 
-# Celery stuff
+# Celery
 celerybeat-schedule
 celerybeat.pid
 
-# SageMath parsed files
+# SageMath
 *.sage.py
 
-# Spyder project settings
+# Spyder
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope
 .ropeproject
 
-# mkdocs documentation
+# mkdocs
 /site
 
 # mypy
@@ -292,242 +213,11 @@ celerybeat.pid
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
+# Pyre
 .pyre/
 
-# pytype static type analyzer
+# pytype
 .pytype/
 
-# Cython debug symbols
+# Cython
 cython_debug/
-
-# Additional cleanup patterns for this project
-# Debug and test files
-debug_*.py
-test_*.py
-verify_*.py
-run_tests.py
-test-requirements.txt
-
-# TypeScript/Vite config files (when not using React)
-tsconfig*.json
-vite.config.*
-eslint.config.*
-
-# Note: frontend/src/ and frontend/public/ are now used for React app
-
-# Additional test and build artifacts
-*.coverage.*
-test-reports/
-test-results/
-.pytest_cache/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Additional database patterns
-*.db-*
-*.sqlite-*
-test*.db
-*_test.db
-development.db
-production.db
-
-# Additional log patterns
-*.log.*
-logs/
-log/
-
-# Additional temporary patterns
-*.tmp.*
-*.temp.*
-.tmp/
-.temp/
-
-# AWS Lambda deployment files
-*.zip
-lambda-*.zip
-backend/build*/
-backend/lambda-*.zip
-backend/build/
-backend/build-*/
-backend/temp-deploy*/
-backend/final-deploy/
-backend/deploy/build*/
-backend/deploy/temp*/
-backend/deploy/final*/
-
-# AWS configuration (never commit these!)
-.aws/
-aws-config.json
-lambda-config.local.json
-cors-config.json
-
-# Lambda test and response files
-test-event.json
-test-http-event.json
-response*.json
-test-response*.json
-test-http-response*.json
-*-test.json
-final-test.json
-simple-test.json
-
-# Deployment artifacts
-lambda_requirements*.txt
-lambda_function_working.py
-lambda_function_simple.py
-lambda_function_minimal.py
-
-# Old deployment platform files
-render.yaml
-railway.json
-Procfile
-start.sh
-deploy.sh
-build.sh
-
-# Batch files
-*.bat
-
-# PowerShell execution policy files
-*.ps1.log
-
-# Additional AWS and deployment patterns
-.serverless/
-serverless.yml
-.chalice/
-chalice.json
-sam-template.yaml
-template.yaml
-cloudformation-template.json
-
-# Additional temporary and cache files
-.cache/
-.temp/
-.tmp/
-temp/
-tmp/
-*.cache
-.build/
-
-# Project-specific temporary files
-backend/temp*/
-backend/build*/
-backend/deploy/temp*/
-backend/deploy/build*/
-backend/deploy/final*/
-frontend/temp*/
-frontend/build*/
-**/temp-*/
-**/build-*/
-**/final-*/
-
-# Deployment and build artifacts
-*.zip
-lambda-*.zip
-deployment-*.zip
-build-*.zip
-cors-fix*.zip
-final-fix*.zip
-
-# PowerShell and script artifacts
-*.ps1.log
-*.ps1.tmp
-script-output.txt
-deployment-log.txt
-
-# AWS CLI output files
-aws-output.json
-lambda-response.json
-function-config.json
-
-# Backup and temporary code files
-*.py.bak
-*.py.tmp
-*.py.old
-
-# Deployment scripts (keep only essential ones)
-deploy-*.ps1
-!deploy-robust.ps1
-fix-*.ps1
-cors-*.ps1
-build-*.ps1
-secure-*.ps1
-test-*.ps1
-!test-api-fixes.ps1
-cleanup-*.ps1
-
-# Manual deployment artifacts
-deploy-manual/
-deploy-temp/
-deploy-robust-*/
-lambda-manual.zip
-lambda-deploy-*.zip
-create_zip.py
-
-# Empty directories that should be removed
-backend/deploy/
-backend/temp-deploy*/
-backend/build-*/
-*.js.bak
-*.js.tmp
-*.js.old
-*.ts.bak
-*.ts.tmp
-*.ts.old
-
-# Additional IDE and editor files
-*.swp
-*.swo
-*~
-.#*
-#*#
-*.orig
-*.rej
-
-# Additional OS files
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# Additional Python patterns
-*.egg
-*.egg-info/
-.installed.cfg
-MANIFEST
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Additional Node.js patterns
-.npm
-.node_repl_history
-*.tsbuildinfo
-.eslintcache
-
-# Additional test patterns
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-coverage.xml
-*.cover
-.hypothesis/
-.cache
-nosetests.xml
-
-# Additional log patterns
-*.log
-*.log.*
-logs/
-log/
-
-# Additional backup patterns
-*.backup
-*.bak
-*.old

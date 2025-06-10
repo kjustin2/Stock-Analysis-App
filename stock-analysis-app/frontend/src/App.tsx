@@ -1,56 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import StockChart from './components/StockChart';
 import IndicatorChart from './components/IndicatorChart';
 import InfoTooltip from './components/InfoTooltip';
 
-// Types
-interface StockInfo {
-  symbol: string;
-  name: string;
-  current_price: number;
-  previous_close: number;
-}
-
-interface Recommendation {
-  action: string;
-  stars: number;
-  confidence: number;
-  price_target: number;
-  reasoning: string[];
-  indicators: Array<{
-    name: string;
-    value: string;
-    status: string;
-    color: string;
-  }> | Record<string, any>;
-  risk_level: string;
-}
-
-interface ChartData {
-  symbol: string;
-  period: string;
-  data: Array<{
-    x: string;
-    o: number;
-    h: number;
-    l: number;
-    c: number;
-    v: number;
-  }>;
-  data_points: number;
-}
-
-interface NewsItem {
-  headline: string;
-  summary: string;
-  url: string;
-  published: string;
-  source: string;
-}
-
-// API Configuration - Update this with your deployed backend URL
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8004';
+// Import services
+import { stockDataService, StockInfo, ChartData } from './services/stockDataService';
+import { recommendationService, Recommendation } from './services/recommendationService';
+import { newsService, NewsItem } from './services/newsService';
 
 const popularStocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX'];
 
@@ -81,23 +37,50 @@ function App() {
     setCurrentSymbol(targetSymbol);
     setLoading(true);
     setError('');
+    
+    // Clear previous data
+    setStockInfo(null);
+    setChartData(null);
+    setRecommendation(null);
+    setNews([]);
 
     try {
-      const [stockInfoRes, recommendationRes, chartDataRes, newsRes] = await Promise.all([
-        axios.get(`${API_BASE}/stocks/${targetSymbol}`),
-        axios.get(`${API_BASE}/stocks/${targetSymbol}/recommendation`),
-        axios.get(`${API_BASE}/stocks/${targetSymbol}/chart-data?period=${currentPeriod}`),
-        axios.get(`${API_BASE}/stocks/${targetSymbol}/news`)
+      // Get stock data and chart data with improved error handling
+      console.log(`🔄 Fetching real-time data for ${targetSymbol}...`);
+      
+      const [stockInfoData, chartDataData] = await Promise.all([
+        stockDataService.getStockInfo(targetSymbol),
+        stockDataService.getChartData(targetSymbol, currentPeriod)
       ]);
 
-      setStockInfo(stockInfoRes.data);
-      setRecommendation(recommendationRes.data);
-      setChartData(chartDataRes.data);
-      // Extract news array from the nested response
-      setNews(newsRes.data.news || []);
+      // Validate that we received real data
+      if (!stockInfoData || !chartDataData || chartDataData.data.length === 0) {
+        throw new Error('No real-time data available for this symbol');
+      }
+
+      console.log(`✅ Successfully fetched data: Price $${stockInfoData.current_price}, ${chartDataData.data.length} chart points`);
+
+      setStockInfo(stockInfoData);
+      setChartData(chartDataData);
+
+      // Generate recommendation based on real stock data and chart data
+      const recommendationData = recommendationService.generateRecommendation(
+        stockInfoData,
+        chartDataData.data,
+        currentPeriod
+      );
+      setRecommendation(recommendationData);
+
+      // Load news asynchronously (non-blocking) to improve performance
+      // This allows the UI to show stock data immediately while news loads in background
+      loadNewsAsync(targetSymbol);
     } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to analyze stock. Please try again.');
+      console.error('Stock analysis failed:', error);
+      setError(
+        `Unable to fetch real-time data for ${targetSymbol}. ` +
+        'Please verify the symbol is correct and try again. ' +
+        'Data sources: Finnhub (primary) → Yahoo Finance (backup).'
+      );
     } finally {
       setLoading(false);
     }
@@ -109,22 +92,70 @@ function App() {
     }
   };
 
-  const changePeriod = (period: string) => {
+  // Async news loading function (non-blocking)
+  const loadNewsAsync = async (symbol: string) => {
+    try {
+      console.log(`📰 Loading news for ${symbol} in background...`);
+      const newsData = await newsService.getStockNews(symbol);
+      setNews(newsData.news || []);
+      
+      if (newsData.news.length === 0) {
+        console.log('ℹ️ No news available for this symbol');
+      } else {
+        console.log(`✅ Background news loaded: ${newsData.news.length} articles`);
+      }
+    } catch (newsError) {
+      console.warn('Background news fetch failed:', newsError);
+      setNews([]);
+    }
+  };
+
+  const changePeriod = async (period: string) => {
     setCurrentPeriod(period);
     if (currentSymbol) {
-      // Re-fetch chart data with new period
-      axios.get(`${API_BASE}/stocks/${currentSymbol}/chart-data?period=${period}`)
-        .then(response => setChartData(response.data))
-        .catch(error => console.error('Error updating chart:', error));
+      try {
+        setLoading(true);
+        console.log(`Updating chart to ${period} period...`);
+        
+        // Re-fetch chart data with new period
+        const chartDataData = await stockDataService.getChartData(currentSymbol, period);
+        
+        if (!chartDataData || chartDataData.data.length === 0) {
+          throw new Error('No chart data available for this period');
+        }
+        
+        setChartData(chartDataData);
+        console.log(`Chart updated: ${chartDataData.data.length} data points for ${period}`);
+      } catch (error) {
+        console.error('Error updating chart:', error);
+        setError(`Unable to fetch chart data for ${period} period. Please try a different timeframe.`);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   // Auto-load AAPL on component mount
   useEffect(() => {
     setStockSymbol('AAPL');
-    setTimeout(() => {
-      analyzeStock('AAPL');
-    }, 500);
+    
+    // Add a slight delay and better error handling for startup
+    const autoLoad = async () => {
+      try {
+        setLoading(true);
+        console.log('🚀 Starting stock analysis application...');
+        await analyzeStock('AAPL');
+      } catch (error) {
+        console.warn('Auto-load failed, continuing with empty state:', error);
+        setError('');
+        setLoading(false);
+        // Don't show error on startup - let users manually trigger analysis
+      }
+    };
+
+    const timer = setTimeout(autoLoad, 1000); // Increased delay for better reliability
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const calculatePriceChange = () => {
@@ -237,26 +268,33 @@ function App() {
               <div className="indicators-section">
                 <h4>📊 Key Indicators</h4>
                 <div className="indicators-grid">
-                  {Array.isArray(recommendation.indicators) ? 
-                    recommendation.indicators.map((indicator, index) => {
-                      // Get explanation for each indicator
-                      const getIndicatorExplanation = (indicatorName: string) => {
-                        const explanations: Record<string, string> = {
-                          'RSI': 'Relative Strength Index (0-100): Measures if a stock is overbought (>70) or oversold (<30). Values between 30-70 suggest balanced momentum.',
-                          'Moving Average': 'Simple Moving Average: The average price over a specific period. When current price is above SMA, it suggests upward momentum.',
-                          'Price Momentum': 'Rate of price change over time. Positive momentum suggests continued upward movement.',
-                          'Market Cap': 'Company size classification (Large/Mid/Small cap) affects stability and risk profile.',
-                          'P/E Ratio': 'Price-to-Earnings ratio shows if stock is fairly valued compared to earnings.',
-                          '52-Week Position': 'Current price position within the 52-week trading range.',
-                          'Volume': 'Trading Volume: Number of shares traded. High volume with price movement confirms the trend strength.',
-                          'MACD': 'Moving Average Convergence Divergence: Shows the relationship between two moving averages.',
-                          'Bollinger Bands': 'Price channels based on standard deviation. Shows volatility and potential support/resistance levels.'
-                        };
-                        
-                        return explanations[indicatorName] || 'Technical indicator used in stock analysis to help determine buy/sell signals.';
+                  {(() => {
+                    // Get explanation for each indicator
+                    const getIndicatorExplanation = (indicatorName: string) => {
+                      const explanations: Record<string, string> = {
+                        'RSI': 'Relative Strength Index (0-100): Measures if a stock is overbought (>70) or oversold (<30). Values between 30-70 suggest balanced momentum.',
+                        'Moving Average': 'Simple Moving Average: The average price over a specific period. When current price is above SMA, it suggests upward momentum.',
+                        'Price Momentum': 'Rate of price change over time. Positive momentum suggests continued upward movement.',
+                        'Market Cap': 'Company size classification (Large/Mid/Small cap) affects stability and risk profile.',
+                        'P/E Ratio': 'Price-to-Earnings ratio shows if stock is fairly valued compared to earnings.',
+                        '52-Week Position': 'Current price position within the 52-week trading range.',
+                        'Volume': 'Trading Volume: Number of shares traded. High volume with price movement confirms the trend strength.',
+                        'MACD': 'Moving Average Convergence Divergence: Shows the relationship between two moving averages.',
+                        'Bollinger Bands': 'Price channels based on standard deviation. Shows volatility and potential support/resistance levels.',
+                        'Market Regime': 'Current market classification based on trend analysis and volatility. BULL (strong uptrend), BEAR (strong downtrend), SIDEWAYS (consolidation), VOLATILE (high uncertainty).',
+                        'Sharpe Ratio': 'Risk-adjusted return measure. Values >1 indicate good risk-adjusted performance, >2 excellent, <0 poor. Measures excess return per unit of risk.',
+                        'Max Drawdown': 'Maximum potential loss from peak to trough. Lower values indicate better downside protection. Represents worst-case scenario risk.',
+                        'Sector Momentum': 'Overall momentum strength across related indicators. Higher percentages indicate stronger directional momentum in the stock.'
                       };
+                      
+                      return explanations[indicatorName] || 'Technical indicator used in stock analysis to help determine buy/sell signals.';
+                    };
 
-                      return (
+                    const allIndicators = [];
+
+                    // Add existing technical indicators
+                    if (Array.isArray(recommendation.indicators)) {
+                      allIndicators.push(...recommendation.indicators.map((indicator, index) => (
                         <div key={index} className="indicator-item" style={{ borderLeft: `4px solid ${indicator.color === 'green' ? '#4CAF50' : indicator.color === 'red' ? '#f44336' : '#ff9800'}` }}>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
                             <strong>{indicator.name}</strong>
@@ -276,28 +314,75 @@ function App() {
                             {indicator.status}
                           </div>
                         </div>
-                      );
-                    })
-                    :
-                    // Fallback for old format (if backend returns object instead of array)
-                    Object.entries(recommendation.indicators).map(([key, value]) => {
-                      const indicatorName = key.replace(/_/g, ' ').toUpperCase();
-                      const indicatorValue = typeof value === 'object' && value !== null && 'value' in value 
-                        ? value.value 
-                        : value;
+                      )));
+                    }
 
-                      return (
-                        <div key={key} className="indicator-item">
-                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                            <strong>{indicatorName}</strong>
-                          </div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#667eea' }}>
-                            {indicatorValue}
-                          </div>
+                    // Add enhanced metrics as additional indicators
+                    const enhancedMetrics = [
+                      // Market Regime
+                      {
+                        name: 'Market Regime',
+                        value: recommendation.market_regime,
+                        status: recommendation.market_regime === 'BULL' ? 'Strong Uptrend Market' :
+                               recommendation.market_regime === 'BEAR' ? 'Strong Downtrend Market' :
+                               recommendation.market_regime === 'VOLATILE' ? 'High Volatility Market' : 'Sideways Market',
+                        color: recommendation.market_regime === 'BULL' ? 'green' :
+                              recommendation.market_regime === 'BEAR' ? 'red' :
+                              recommendation.market_regime === 'VOLATILE' ? 'orange' : 'blue'
+                      },
+                      // Sharpe Ratio
+                      {
+                        name: 'Sharpe Ratio',
+                        value: recommendation.sharpe_ratio.toFixed(2),
+                        status: recommendation.sharpe_ratio > 1 ? 'Excellent Risk-Adjusted Returns' :
+                               recommendation.sharpe_ratio > 0 ? 'Good Risk-Adjusted Performance' : 'Poor Risk-Adjusted Returns',
+                        color: recommendation.sharpe_ratio > 1 ? 'green' :
+                              recommendation.sharpe_ratio > 0 ? 'orange' : 'red'
+                      },
+                      // Max Drawdown
+                      {
+                        name: 'Max Drawdown',
+                        value: `${recommendation.max_drawdown.toFixed(1)}%`,
+                        status: recommendation.max_drawdown < 10 ? 'Low Downside Risk' :
+                               recommendation.max_drawdown < 20 ? 'Moderate Downside Risk' : 'High Downside Risk',
+                        color: recommendation.max_drawdown < 10 ? 'green' :
+                              recommendation.max_drawdown < 20 ? 'orange' : 'red'
+                      },
+                      // Sector Momentum
+                      {
+                        name: 'Sector Momentum',
+                        value: `${(recommendation.sector_momentum * 100).toFixed(0)}%`,
+                        status: recommendation.sector_momentum > 0.6 ? 'Strong Directional Momentum' :
+                               recommendation.sector_momentum > 0.4 ? 'Moderate Momentum' : 'Weak Momentum',
+                        color: recommendation.sector_momentum > 0.6 ? 'green' :
+                              recommendation.sector_momentum > 0.4 ? 'orange' : 'red'
+                      }
+                    ];
+
+                    allIndicators.push(...enhancedMetrics.map((indicator, index) => (
+                      <div key={`enhanced-${index}`} className="indicator-item" style={{ borderLeft: `4px solid ${indicator.color === 'green' ? '#4CAF50' : indicator.color === 'red' ? '#f44336' : indicator.color === 'blue' ? '#2196F3' : '#ff9800'}` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                          <strong>{indicator.name}</strong>
+                          <InfoTooltip 
+                            title={indicator.name}
+                            content={getIndicatorExplanation(indicator.name)}
+                          />
                         </div>
-                      );
-                    })
-                  }
+                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#667eea', marginBottom: '3px' }}>
+                          {indicator.value}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.9rem', 
+                          color: indicator.color === 'green' ? '#4CAF50' : indicator.color === 'red' ? '#f44336' : indicator.color === 'blue' ? '#2196F3' : '#ff9800',
+                          fontWeight: '500'
+                        }}>
+                          {indicator.status}
+                        </div>
+                      </div>
+                    )));
+
+                    return allIndicators;
+                  })()}
                 </div>
               </div>
               
@@ -322,6 +407,8 @@ function App() {
                   <small>Consider your risk tolerance before investing</small>
                 </div>
               </div>
+
+
             </div>
 
             {/* Additional Stock Details */}
@@ -370,7 +457,9 @@ function App() {
             <div className="card">
               <h3>📰 Latest News</h3>
               <div>
-                {news.length > 0 ? (
+                {loading ? (
+                  <div className="loading">Loading real financial news...</div>
+                ) : news.length > 0 ? (
                   news.slice(0, 5).map((item, index) => (
                     <div key={index} className="news-item" style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
                       <h4 style={{ fontSize: '14px', marginBottom: '5px' }}>
@@ -385,7 +474,10 @@ function App() {
                     </div>
                   ))
                 ) : (
-                  <div className="loading">Loading news...</div>
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    <p>📊 Real-time financial news unavailable</p>
+                    <small>News feeds may be temporarily unavailable</small>
+                  </div>
                 )}
               </div>
             </div>
