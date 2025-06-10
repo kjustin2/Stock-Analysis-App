@@ -135,16 +135,16 @@ function App() {
     }
   };
 
-  // Auto-load AAPL on component mount
+  // Auto-load QQQ on component mount
   useEffect(() => {
-    setStockSymbol('AAPL');
+    setStockSymbol('QQQ');
     
     // Add a slight delay and better error handling for startup
     const autoLoad = async () => {
       try {
         setLoading(true);
         console.log('🚀 Starting stock analysis application...');
-        await analyzeStock('AAPL');
+        await analyzeStock('QQQ');
       } catch (error) {
         console.warn('Auto-load failed, continuing with empty state:', error);
         setError('');
