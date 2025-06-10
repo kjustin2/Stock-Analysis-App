@@ -268,7 +268,7 @@ Works with any valid stock symbol on major exchanges:
 **Empty charts or missing indicators:**
 - Symbol may be delisted or suspended from trading
 - Market may be closed (affects real-time updates)
-- Try a different time period (1w, 1m, 3m)
+- Try a different time period (1w, 1m, 3m, 6m)
 - Check browser console for detailed error messages
 
 **No news available:**
