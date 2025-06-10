@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/Code-Side-Projects/',
+  base: '/Stock-Analysis-App/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
