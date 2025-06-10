@@ -411,6 +411,35 @@ function App() {
 
             </div>
 
+            {/* Mobile News Section - appears after analysis on mobile */}
+            <div className="card mobile-news-section">
+              <h3>📰 Latest News</h3>
+              <div>
+                {loading ? (
+                  <div className="loading">Loading real financial news...</div>
+                ) : news.length > 0 ? (
+                  news.slice(0, 5).map((item, index) => (
+                    <div key={index} className="news-item" style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
+                      <h4 style={{ fontSize: '14px', marginBottom: '5px' }}>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: '#333', textDecoration: 'none' }}>
+                          {item.headline}
+                        </a>
+                      </h4>
+                      <p style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>{item.summary}</p>
+                      <small style={{ color: '#999' }}>
+                        {item.source} - {new Date(item.published).toLocaleDateString()}
+                      </small>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                    <p>📊 Real-time financial news unavailable</p>
+                    <small>News feeds may be temporarily unavailable</small>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Additional Stock Details */}
             <div className="card">
               <h3>📈 Stock Details</h3>

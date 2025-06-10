@@ -340,6 +340,11 @@ body {
     font-weight: bold;
 }
 
+/* News section visibility control */
+.mobile-news-section {
+    display: none;
+}
+
 .loading {
     text-align: center;
     padding: 40px;
@@ -369,6 +374,15 @@ body {
     .right-panel {
         order: 1;
         margin-bottom: 20px;
+    }
+    
+    /* Show mobile news section and hide desktop news section */
+    .mobile-news-section {
+        display: block;
+    }
+    
+    .right-panel .card:last-child {
+        display: none;
     }
     
     .search-container {
