@@ -347,8 +347,10 @@ body {
 
 .loading {
     text-align: center;
-    padding: 40px;
-    color: #666;
+    padding: 50px;
+    font-size: 1.2rem;
+    color: #667eea;
+    animation: loadingPulse 1.5s ease-in-out infinite;
 }
 
 .error {
@@ -396,4 +398,129 @@ body {
     .action-text {
         font-size: 2rem;
     }
+}
+
+/* Real-time indicator animations */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Real-time status indicator styles */
+.realtime-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #4CAF50;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.realtime-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+.realtime-status.live {
+    color: #4CAF50;
+}
+
+.realtime-status.connecting {
+    color: #ff9800;
+}
+
+.realtime-status.disconnected {
+    color: #f44336;
+}
+
+/* Enhanced loading animation */
+@keyframes loadingPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Data source indicator */
+.data-source-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+/* Connection status colors */
+.data-source-badge.websocket {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+.data-source-badge.polling {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+.data-source-badge.fallback {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border-color: rgba(244, 67, 54, 0.3);
+}
+
+/* Smooth transitions for real-time updates */
+.stock-price {
+    transition: color 0.3s ease;
+}
+
+.price-change {
+    transition: all 0.3s ease;
+}
+
+/* Updated data flash animation */
+@keyframes dataUpdate {
+    0% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(76, 175, 80, 0.2);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.data-updated {
+    animation: dataUpdate 1s ease-in-out;
 } 

@@ -1,4 +1,15 @@
 import axios from 'axios';
+import { 
+  ErrorLogger, 
+  createNetworkError, 
+  createTimeoutError, 
+  createValidationError, 
+  createApiKeyError,
+  createDataError,
+  createRateLimitError 
+} from './errors';
+import { RateLimiter } from './rateLimiter';
+import { cacheService, CacheKeys, CachePriority } from './cacheService';
 
 // Types for stock data
 export interface StockInfo {
@@ -22,28 +33,36 @@ export interface ChartData {
   period: string;
   data: ChartDataPoint[];
   data_points: number;
+  technicalData?: import('./technicalIndicatorService').TechnicalData;
 }
 
-// API Configuration
+// Enhanced API Configuration
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const YAHOO_PROXY_URL = 'https://api.allorigins.win/get?url=';
 const YAHOO_FINANCE_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
+// Standardized timeout configurations
+const TIMEOUT_CONFIG = {
+  finnhub: 6000,    // 6 seconds for Finnhub (premium service)
+  yahoo: 8000,      // 8 seconds for Yahoo (may be slower through proxy)
+  chart: 10000      // 10 seconds for chart data (larger responses)
+};
+
 export class StockDataService {
   private static instance: StockDataService;
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
-  private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minutes for real-time freshness
   private readonly finnhubApiKey: string;
+  private rateLimiter: RateLimiter;
+  private errorLogger: ErrorLogger;
 
   constructor() {
-    // Get API key from environment variables (set during build via GitHub Actions)
+    // Initialize error logging and rate limiting
+    this.errorLogger = ErrorLogger.getInstance();
+    this.rateLimiter = RateLimiter.getInstance();
+    
+    // Get API key from environment variables
     this.finnhubApiKey = import.meta.env.VITE_FINNHUB_API_KEY || '';
     
-    if (!this.finnhubApiKey) {
-      console.warn('⚠️ Finnhub API key not found. Will use Yahoo Finance only.');
-    } else {
-      console.log('✅ Finnhub API key loaded successfully');
-    }
+    this.validateApiKeyConfiguration();
   }
 
   public static getInstance(): StockDataService {
@@ -53,27 +72,42 @@ export class StockDataService {
     return StockDataService.instance;
   }
 
-  private isCacheValid(key: string): boolean {
-    const cached = this.cache.get(key);
-    if (!cached) return false;
-    return Date.now() - cached.timestamp < this.CACHE_TTL;
+  private validateApiKeyConfiguration(): void {
+    if (!this.finnhubApiKey) {
+      const apiKeyError = createApiKeyError(
+        'Finnhub API key not found. Service will use Yahoo Finance only.',
+        'finnhub',
+        { environment: 'frontend', keyPresent: false }
+      );
+      this.errorLogger.log(apiKeyError);
+      console.warn('⚠️ Finnhub API key not found. Will use Yahoo Finance only.');
+    } else {
+      console.log('✅ Finnhub API key loaded successfully');
+    }
   }
 
-  private getCachedData(key: string): any {
-    const cached = this.cache.get(key);
-    return cached ? cached.data : null;
-  }
 
-  private setCachedData(key: string, data: any): void {
-    this.cache.set(key, { data, timestamp: Date.now() });
-  }
 
   async getStockInfo(symbol: string): Promise<StockInfo> {
-    const cacheKey = `stock_info_${symbol}`;
+    // Validate input
+    if (!symbol || typeof symbol !== 'string' || symbol.trim().length === 0) {
+      const validationError = createValidationError(
+        'Invalid symbol provided',
+        'system',
+        { symbol },
+        { method: 'getStockInfo' }
+      );
+      this.errorLogger.log(validationError);
+      throw validationError;
+    }
+
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const cacheKey = CacheKeys.stockInfo(cleanSymbol);
     
-    if (this.isCacheValid(cacheKey)) {
-      console.log(`📦 Using cached data for ${symbol}`);
-      return this.getCachedData(cacheKey);
+    const cachedData = cacheService.get<StockInfo>(cacheKey);
+    if (cachedData) {
+      console.log(`📦 Using cached data for ${cleanSymbol}`);
+      return cachedData;
     }
 
     const startTime = Date.now();
@@ -81,79 +115,186 @@ export class StockDataService {
     // Try Finnhub first (if API key available)
     if (this.finnhubApiKey) {
       try {
-        const stockInfo = await this.fetchStockInfoFromFinnhub(symbol);
+        const stockInfo = await this.rateLimiter.executeRequest(
+          'finnhub',
+          cleanSymbol,
+          () => this.fetchStockInfoFromFinnhub(cleanSymbol),
+          1 // High priority for real-time data
+        );
+        
         const fetchTime = Date.now() - startTime;
-        console.log(`✅ Real data fetched from Finnhub for ${symbol}: $${stockInfo.current_price} (${fetchTime}ms)`);
-        this.setCachedData(cacheKey, stockInfo);
+        console.log(`✅ Real data fetched from Finnhub for ${cleanSymbol}: $${stockInfo.current_price} (${fetchTime}ms)`);
+        cacheService.set(cacheKey, stockInfo, undefined, CachePriority.HIGH);
         return stockInfo;
       } catch (error) {
-        console.warn(`⚠️ Finnhub fetch failed after ${Date.now() - startTime}ms, falling back to Yahoo Finance:`, error);
+        const fetchTime = Date.now() - startTime;
+        console.warn(`⚠️ Finnhub fetch failed after ${fetchTime}ms, falling back to Yahoo Finance:`, error);
+        
+        // Log the error but don't throw it yet (we have fallback)
+        if (error instanceof Error && 'details' in error) {
+          this.errorLogger.log(error as any);
+        }
       }
-    } else {
-      console.log('⚠️ No Finnhub API key - using Yahoo Finance as primary source');
     }
 
     // Fallback to Yahoo Finance
     try {
-      const stockInfo = await this.fetchStockInfoFromYahoo(symbol);
+      const stockInfo = await this.rateLimiter.executeRequest(
+        'yahoo',
+        cleanSymbol,
+        () => this.fetchStockInfoFromYahoo(cleanSymbol),
+        0 // Normal priority for fallback
+      );
+      
       const fetchTime = Date.now() - startTime;
-      console.log(`✅ Real data fetched from Yahoo Finance for ${symbol}: $${stockInfo.current_price} (${fetchTime}ms)`);
-      this.setCachedData(cacheKey, stockInfo);
+      console.log(`✅ Real data fetched from Yahoo Finance for ${cleanSymbol}: $${stockInfo.current_price} (${fetchTime}ms)`);
+      cacheService.set(cacheKey, stockInfo, undefined, CachePriority.MEDIUM);
       return stockInfo;
     } catch (error) {
-      console.error('All data sources failed:', error);
-      throw new Error(`Unable to fetch real-time data for ${symbol}. Please check the symbol and try again.`);
+      const totalTime = Date.now() - startTime;
+      const networkError = createNetworkError(
+        `Unable to fetch real-time data for ${cleanSymbol}. All data sources failed.`,
+        'yahoo',
+        error,
+        { symbol: cleanSymbol, totalFetchTime: totalTime, attemptedSources: ['finnhub', 'yahoo'] }
+      );
+      
+      this.errorLogger.log(networkError);
+      console.error('❌ All data sources failed:', error);
+      throw networkError;
     }
   }
 
   private async fetchStockInfoFromFinnhub(symbol: string): Promise<StockInfo> {
-    // Get current quote from Finnhub
-    const quoteResponse = await axios.get(`${FINNHUB_BASE_URL}/quote`, {
-      params: {
-        symbol: symbol.toUpperCase(),
-        token: this.finnhubApiKey
-      },
-      timeout: 5000 // Faster timeout for better performance
-    });
-
-    const quote = quoteResponse.data;
-
-    // Validate Finnhub response
-    if (!quote || quote.c === undefined || quote.pc === undefined) {
-      throw new Error('Invalid quote data from Finnhub');
-    }
-
-    // Get company profile for the name
-    let companyName = `${symbol.toUpperCase()} Inc.`;
     try {
-      const profileResponse = await axios.get(`${FINNHUB_BASE_URL}/stock/profile2`, {
+      // Get current quote from Finnhub with timeout and error handling
+      const quoteResponse = await axios.get(`${FINNHUB_BASE_URL}/quote`, {
         params: {
-          symbol: symbol.toUpperCase(),
+          symbol: symbol,
           token: this.finnhubApiKey
         },
-        timeout: 5000
+        timeout: TIMEOUT_CONFIG.finnhub
       });
 
-      if (profileResponse.data && profileResponse.data.name) {
-        companyName = profileResponse.data.name;
+      const quote = quoteResponse.data;
+
+      // Enhanced validation for Finnhub response
+      if (!quote || typeof quote !== 'object') {
+        throw createDataError(
+          'Invalid response structure from Finnhub',
+          'finnhub',
+          quote,
+          { symbol, endpoint: 'quote' }
+        );
       }
+
+      if (quote.c === undefined || quote.pc === undefined || quote.c === 0) {
+        throw createValidationError(
+          'Invalid or missing quote data from Finnhub',
+          'finnhub',
+          quote,
+          { symbol, missingFields: ['current_price', 'previous_close'] }
+        );
+      }
+
+      // Get company profile for the name with separate error handling
+      let companyName = `${symbol} Inc.`;
+      try {
+        const profileResponse = await axios.get(`${FINNHUB_BASE_URL}/stock/profile2`, {
+          params: {
+            symbol: symbol,
+            token: this.finnhubApiKey
+          },
+          timeout: TIMEOUT_CONFIG.finnhub
+        });
+
+        if (profileResponse.data && profileResponse.data.name) {
+          companyName = profileResponse.data.name;
+        }
+      } catch (profileError) {
+        // Log profile fetch failure but don't fail the whole request
+        const profileErr = createNetworkError(
+          'Could not fetch company profile from Finnhub',
+          'finnhub',
+          profileError,
+          { symbol, endpoint: 'profile2' }
+        );
+        this.errorLogger.log(profileErr);
+      }
+
+      const stockInfo: StockInfo = {
+        symbol: symbol,
+        name: companyName,
+        current_price: parseFloat(quote.c.toFixed(2)),
+        previous_close: parseFloat(quote.pc.toFixed(2))
+      };
+
+      // Additional data validation
+      if (stockInfo.current_price <= 0 || stockInfo.previous_close <= 0) {
+        throw createValidationError(
+          'Invalid price data from Finnhub (negative or zero values)',
+          'finnhub',
+          { current_price: stockInfo.current_price, previous_close: stockInfo.previous_close },
+          { symbol }
+        );
+      }
+
+      return stockInfo;
+
     } catch (error) {
-      console.warn('Could not fetch company profile from Finnhub:', error);
+      // Enhanced error handling with proper categorization
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw createTimeoutError(
+            `Finnhub request timed out for ${symbol}`,
+            'finnhub',
+            TIMEOUT_CONFIG.finnhub,
+            { symbol }
+          );
+        }
+        
+        if (error.response?.status === 401) {
+          throw createApiKeyError(
+            'Invalid Finnhub API key',
+            'finnhub',
+            { symbol, status: error.response.status }
+          );
+        }
+        
+        if (error.response?.status === 429) {
+          throw createRateLimitError(
+            'Finnhub rate limit exceeded',
+            'finnhub',
+            60000, // 1 minute retry
+            { symbol, status: error.response.status }
+          );
+        }
+        
+        throw createNetworkError(
+          `Finnhub API error for ${symbol}`,
+          'finnhub',
+          error,
+          { 
+            symbol, 
+            status: error.response?.status,
+            statusText: error.response?.statusText 
+          }
+        );
+      }
+      
+      // Re-throw custom errors as-is
+      if (error && typeof error === 'object' && 'details' in error) {
+        throw error;
+      }
+      
+      // Unknown error
+      throw createNetworkError(
+        `Unknown error fetching from Finnhub for ${symbol}`,
+        'finnhub',
+        error,
+        { symbol }
+      );
     }
-
-    const stockInfo: StockInfo = {
-      symbol: symbol.toUpperCase(),
-      name: companyName,
-      current_price: parseFloat(quote.c.toFixed(2)),
-      previous_close: parseFloat(quote.pc.toFixed(2))
-    };
-
-    // Validate data integrity
-    if (stockInfo.current_price <= 0 || stockInfo.previous_close <= 0) {
-      throw new Error('Invalid price data from Finnhub');
-    }
-
-    return stockInfo;
   }
 
   private async fetchStockInfoFromYahoo(symbol: string): Promise<StockInfo> {
@@ -163,53 +304,131 @@ export class StockDataService {
       if (stockInfo) return stockInfo;
     } catch (error) {
       console.warn('Yahoo direct method failed, trying chart extraction:', error);
+      
+      // Log the direct method failure
+      const directError = createNetworkError(
+        'Yahoo direct method failed',
+        'yahoo',
+        error,
+        { symbol, method: 'direct' }
+      );
+      this.errorLogger.log(directError);
     }
 
     // Fallback to chart-based extraction
-    return await this.fetchStockInfoFromYahooChart(symbol);
+    try {
+      return await this.fetchStockInfoFromYahooChart(symbol);
+    } catch (error) {
+      throw createNetworkError(
+        `All Yahoo Finance methods failed for ${symbol}`,
+        'yahoo',
+        error,
+        { symbol, attemptedMethods: ['direct', 'chart'] }
+      );
+    }
   }
 
   private async fetchStockInfoYahooDirect(symbol: string): Promise<StockInfo | null> {
-    const yahooUrl = `${YAHOO_FINANCE_BASE}/${symbol}?interval=1d&range=2d`;
-    const response = await axios.get(`${YAHOO_PROXY_URL}${encodeURIComponent(yahooUrl)}`, {
-      timeout: 8000 // Faster timeout for Yahoo Finance
-    });
+    try {
+      const yahooUrl = `${YAHOO_FINANCE_BASE}/${symbol}?interval=1d&range=2d`;
+      const response = await axios.get(`${YAHOO_PROXY_URL}${encodeURIComponent(yahooUrl)}`, {
+        timeout: TIMEOUT_CONFIG.yahoo
+      });
 
-    let yahooData;
-    if (response.data && response.data.contents) {
-      yahooData = JSON.parse(response.data.contents);
-    } else {
-      yahooData = response.data;
+      let yahooData;
+      if (response.data && response.data.contents) {
+        yahooData = JSON.parse(response.data.contents);
+      } else {
+        yahooData = response.data;
+      }
+
+      if (!yahooData?.chart?.result?.[0]) {
+        throw createDataError(
+          'Invalid response structure from Yahoo Finance',
+          'yahoo',
+          yahooData,
+          { symbol, method: 'direct' }
+        );
+      }
+
+      const result = yahooData.chart.result[0];
+      const meta = result.meta;
+      
+      const currentPrice = meta.regularMarketPrice || meta.previousClose || meta.price || meta.currentPrice;
+      const previousClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
+      const symbolName = meta.symbol || symbol;
+      const companyName = meta.longName || meta.shortName || meta.displayName || `${symbolName} Inc.`;
+
+      if (!currentPrice || !previousClose || !symbolName) {
+        return null;
+      }
+
+      const stockInfo: StockInfo = {
+        symbol: symbolName.toUpperCase(),
+        name: companyName,
+        current_price: parseFloat(currentPrice.toFixed(2)),
+        previous_close: parseFloat(previousClose.toFixed(2))
+      };
+
+      if (stockInfo.current_price <= 0 || stockInfo.previous_close <= 0) {
+        return null;
+      }
+
+      return stockInfo;
+    } catch (error) {
+      // Enhanced error handling with proper categorization
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          throw createTimeoutError(
+            `Yahoo direct method timed out for ${symbol}`,
+            'yahoo',
+            TIMEOUT_CONFIG.yahoo,
+            { symbol }
+          );
+        }
+        
+        if (error.response?.status === 401) {
+          throw createApiKeyError(
+            'Invalid Yahoo API key',
+            'yahoo',
+            { symbol, status: error.response.status }
+          );
+        }
+        
+        if (error.response?.status === 429) {
+          throw createRateLimitError(
+            'Yahoo rate limit exceeded',
+            'yahoo',
+            60000, // 1 minute retry
+            { symbol, status: error.response.status }
+          );
+        }
+        
+        throw createNetworkError(
+          `Yahoo API error for ${symbol}`,
+          'yahoo',
+          error,
+          { 
+            symbol, 
+            status: error.response?.status,
+            statusText: error.response?.statusText 
+          }
+        );
+      }
+      
+      // Re-throw custom errors as-is
+      if (error && typeof error === 'object' && 'details' in error) {
+        throw error;
+      }
+      
+      // Unknown error
+      throw createNetworkError(
+        `Unknown error fetching from Yahoo Finance for ${symbol}`,
+        'yahoo',
+        error,
+        { symbol }
+      );
     }
-
-    if (!yahooData?.chart?.result?.[0]) {
-      throw new Error('Invalid response structure from Yahoo Finance');
-    }
-
-    const result = yahooData.chart.result[0];
-    const meta = result.meta;
-    
-    const currentPrice = meta.regularMarketPrice || meta.previousClose || meta.price || meta.currentPrice;
-    const previousClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
-    const symbolName = meta.symbol || symbol.toUpperCase();
-    const companyName = meta.longName || meta.shortName || meta.displayName || `${symbolName} Inc.`;
-
-    if (!currentPrice || !previousClose || !symbolName) {
-      return null;
-    }
-
-    const stockInfo: StockInfo = {
-      symbol: symbolName.toUpperCase(),
-      name: companyName,
-      current_price: parseFloat(currentPrice.toFixed(2)),
-      previous_close: parseFloat(previousClose.toFixed(2))
-    };
-
-    if (stockInfo.current_price <= 0 || stockInfo.previous_close <= 0) {
-      return null;
-    }
-
-    return stockInfo;
   }
 
   private async fetchStockInfoFromYahooChart(symbol: string): Promise<StockInfo> {
@@ -237,11 +456,14 @@ export class StockDataService {
   }
 
   async getChartData(symbol: string, period: string): Promise<ChartData> {
-    const cacheKey = `chart_data_${symbol}_${period}`;
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const cacheKey = CacheKeys.chartData(cleanSymbol, period);
     
-    if (this.isCacheValid(cacheKey)) {
-      console.log(`📦 Using cached chart data for ${symbol} (${period})`);
-      return this.getCachedData(cacheKey);
+    // Check cache first
+    const cachedData = cacheService.get<ChartData>(cacheKey);
+    if (cachedData) {
+      console.log(`📦 Using cached chart data for ${cleanSymbol} (${period})`);
+      return cachedData;
     }
 
     const startTime = Date.now();
@@ -249,10 +471,10 @@ export class StockDataService {
     // Try Finnhub first for historical data (if API key available)
     if (this.finnhubApiKey) {
       try {
-        const chartData = await this.fetchChartDataFromFinnhub(symbol, period);
+        const chartData = await this.fetchChartDataFromFinnhub(cleanSymbol, period);
         const fetchTime = Date.now() - startTime;
-        console.log(`✅ Real chart data fetched from Finnhub for ${symbol}: ${chartData.data.length} points (${fetchTime}ms)`);
-        this.setCachedData(cacheKey, chartData);
+        console.log(`✅ Real chart data fetched from Finnhub for ${cleanSymbol}: ${chartData.data.length} points (${fetchTime}ms)`);
+        cacheService.set(cacheKey, chartData, undefined, CachePriority.MEDIUM);
         return chartData;
       } catch (error) {
         console.warn(`⚠️ Finnhub chart fetch failed after ${Date.now() - startTime}ms, falling back to Yahoo Finance:`, error);
@@ -261,14 +483,40 @@ export class StockDataService {
 
     // Fallback to Yahoo Finance
     try {
-      const chartData = await this.fetchChartDataFromYahoo(symbol, period);
+      const chartData = await this.fetchChartDataFromYahoo(cleanSymbol, period);
       const fetchTime = Date.now() - startTime;
-      console.log(`✅ Real chart data fetched from Yahoo Finance for ${symbol}: ${chartData.data.length} points (${fetchTime}ms)`);
-      this.setCachedData(cacheKey, chartData);
+      console.log(`✅ Real chart data fetched from Yahoo Finance for ${cleanSymbol}: ${chartData.data.length} points (${fetchTime}ms)`);
+      cacheService.set(cacheKey, chartData, undefined, CachePriority.LOW);
       return chartData;
     } catch (error) {
       console.error('All chart data sources failed:', error);
-      throw new Error(`Unable to fetch chart data for ${symbol}. Please check the symbol and try again.`);
+      throw new Error(`Unable to fetch chart data for ${cleanSymbol}. Please check the symbol and try again.`);
+    }
+  }
+
+  // New method to get chart data with technical indicators for ML analysis
+  async getChartDataWithTechnicals(symbol: string, period: string): Promise<ChartData> {
+    // Get basic chart data first
+    const chartData = await this.getChartData(symbol, period);
+    
+    try {
+      // Calculate technical indicators
+      const { technicalIndicatorService } = await import('./technicalIndicatorService');
+      const technicalData = technicalIndicatorService.calculateTechnicalIndicators(
+        chartData.data,
+        symbol,
+        period
+      );
+      
+      // Return chart data with technical indicators included
+      return {
+        ...chartData,
+        technicalData: technicalData
+      };
+    } catch (error) {
+      console.warn('Failed to calculate technical indicators for ML analysis:', error);
+      // Return chart data without technical indicators if calculation fails
+      return chartData;
     }
   }
 

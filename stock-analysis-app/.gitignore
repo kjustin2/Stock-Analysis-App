@@ -1,7 +1,45 @@
-# Environment files
+# Environment files - CRITICAL SECURITY
 .env
 .env.*
 !.env.example
+*.env
+*.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+
+# API keys and secrets - NEVER COMMIT THESE
+api_keys.json
+secrets.yaml
+.secrets/
+secrets.json
+**/secrets/
+**/api_keys/
+*.pem
+*.key
+*.cert
+*.csr
+
+# MCP configuration files (contain API keys)
+.cursor/mcp.json
+.windsurf/mcp.json
+.roo/mcp.json
+.trae/mcp.json
+.clinerules/mcp.json
+.vscode/mcp.json
+**/mcp.json
+
+# TaskMaster configuration (may contain API keys)
+.taskmaster/config.json
+
+# Local configuration
+local_config.*
+local_settings.*
+dev_config.json
+config.local.*
+*.local.json
+*.dev.json
 
 # Dependencies
 node_modules/
@@ -142,18 +180,6 @@ __pycache__/
 .rts2_cache_es/
 .rts2_cache_umd/
 
-# API keys and secrets
-api_keys.json
-secrets.yaml
-.secrets/
-secrets.json
-
-# Local configuration
-local_config.*
-local_settings.*
-dev_config.json
-config.local.*
-
 # Documentation builds
 docs/_build/
 docs/build/
@@ -161,10 +187,15 @@ site/
 
 # Deployment artifacts
 *.zip
+*.tar.gz
+*.rar
 
 # Stock Analysis App Specific
 yfinance_cache/
 .yfinance_cache/
+financial_data/
+user_data/
+trading_data/
 
 # Additional temporary patterns
 temp/
@@ -221,3 +252,34 @@ dmypy.json
 
 # Cython
 cython_debug/
+
+# Additional security exclusions
+*.p12
+*.pfx
+auth.json
+credentials.json
+service-account*.json
+gcp-key*.json
+aws-credentials*
+azure-credentials*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Additional caches
+.vite/
+.rollup.cache/
+.vite-cache/
+
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 
