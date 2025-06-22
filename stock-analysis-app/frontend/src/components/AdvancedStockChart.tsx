@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -43,7 +43,7 @@ interface StockChartData {
 }
 
 interface AdvancedStockChartProps {
-  chartData: ChartData;
+  chartData: StockChartData;
   height?: number;
   chartType?: 'line' | 'candlestick';
   showVolume?: boolean;
@@ -220,7 +220,7 @@ const AdvancedStockChart: React.FC<AdvancedStockChartProps> = ({
         marginBottom: '10px'
       }}>
         <Line
-          data={chartData}
+          data={mainChartData}
           options={chartOptions}
           height={height}
         />
@@ -229,8 +229,7 @@ const AdvancedStockChart: React.FC<AdvancedStockChartProps> = ({
       {/* Volume Chart (Multi-pane only) */}
       {chartLayout === 'multi' && showVolume && (
         <div style={{ height: `${Math.floor(height * 0.3)}px`, position: 'relative' }}>
-          <Chart 
-            type="bar" 
+          <Bar 
             data={{
               labels: chartData.data.map(point => new Date(point.x)),
               datasets: [{
