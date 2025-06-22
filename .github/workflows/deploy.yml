@@ -19,16 +19,16 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: stock-analysis-app/frontend/package-lock.json
+        cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
       run: |
-        cd stock-analysis-app/frontend
+        cd frontend
         npm ci
 
     - name: Build
       run: |
-        cd stock-analysis-app/frontend
+        cd frontend
         npm run build
       env:
         VITE_FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
@@ -39,7 +39,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: stock-analysis-app/frontend/dist
+        path: frontend/dist
 
     - name: Deploy to GitHub Pages
       id: deployment

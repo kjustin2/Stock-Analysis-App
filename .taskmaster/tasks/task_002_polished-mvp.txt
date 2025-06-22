@@ -1,0 +1,16 @@
+# Task ID: 2
+# Title: Implement Clear Stock Prediction Engine
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Replace confusing recommendations with clear UP/DOWN/HOLD predictions backed by confidence percentages and simple explanations.
+# Details:
+- Replace 'weak sell' and similar confusing terms with clear UP/DOWN/HOLD predictions
+- Implement confidence percentage calculation (e.g., '70% confidence')
+- Base predictions on technical indicators and pattern analysis
+- Provide simple, user-friendly explanations for predictions
+- Create prediction algorithm using RSI, MACD, SMA combinations
+- Test prediction accuracy against historical data
+
+# Test Strategy:
+Backtesting with historical data, accuracy validation, user experience testing
