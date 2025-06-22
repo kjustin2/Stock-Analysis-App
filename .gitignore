@@ -49,7 +49,6 @@ node_modules/
 yarn-error.log*
 yarn-debug.log*
 lerna-debug.log*
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 

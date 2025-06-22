@@ -96,7 +96,6 @@
 **/site/
 
 # Package manager files (may contain registry tokens)
-**/package-lock.json
 **/yarn.lock
 **/pnpm-lock.yaml
 **/.yarn-integrity
